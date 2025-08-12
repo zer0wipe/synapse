@@ -4,13 +4,12 @@ import { LLMService } from './src/llmService';
 import { NoteManager } from './src/noteManager';
 import { ContextBuilder } from './src/contextBuilder';
 import { SynapseConsoleView, SYNAPSE_VIEW_TYPE } from './src/consoleView';
-import { PromptModal } from './src/modal';
 
 export default class SynapsePlugin extends Plugin {
-	settings: SynapseSettings;
-    llmService: LLMService;
-    noteManager: NoteManager;
-    contextBuilder: ContextBuilder;
+	settings!: SynapseSettings;
+    llmService!: LLMService;
+    noteManager!: NoteManager;
+    contextBuilder!: ContextBuilder;
 
 	async onload() {
 		// Initialize services first with default settings
@@ -84,12 +83,14 @@ export default class SynapsePlugin extends Plugin {
         this.app.workspace.detachLeavesOfType(SYNAPSE_VIEW_TYPE);
 
         const leaf = this.app.workspace.getRightLeaf(true); // Get or create a new leaf in the right sidebar
-        await leaf.setViewState({
-            type: SYNAPSE_VIEW_TYPE,
-            active: true,
-        });
-
-        this.app.workspace.revealLeaf(leaf);
+        if (leaf) {
+            await leaf.setViewState({
+                type: SYNAPSE_VIEW_TYPE,
+                active: true,
+            });
+    
+            this.app.workspace.revealLeaf(leaf);
+        }
     }
 
     async processThought(prompt: string, activeFile: TFile) {
@@ -115,7 +116,9 @@ export default class SynapsePlugin extends Plugin {
         } catch (error) {
             console.error("Synapse Error:", error);
             thinkingNotice.hide();
-            new Notice(`Error: ${error.message}`);
+            if (error instanceof Error) {
+                new Notice(`Error: ${error.message}`);
+            }
         }
     }
 }

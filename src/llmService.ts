@@ -43,8 +43,10 @@ export class LLMService {
             return JSON.parse(response);
         } catch (error) {
             console.error("Error calling Gemini API:", error);
-            new Notice(`Failed to call Gemini API. ${error.message}`);
-            throw new Error(`Failed to call Gemini API. ${error.message}`);
+            if (error instanceof Error) {
+                new Notice(`Failed to call Gemini API. ${error.message}`);
+                throw new Error(`Failed to call Gemini API. ${error.message}`);
+            }
         }
     }
 

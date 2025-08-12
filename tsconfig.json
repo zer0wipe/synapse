@@ -9,6 +9,9 @@
     "noImplicitAny": true,
     "moduleResolution": "node",
     "importHelpers": false,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "strictNullChecks": true,
     "lib": [
       "DOM",
       "ES5",

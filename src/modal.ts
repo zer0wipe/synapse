@@ -7,6 +7,7 @@ export class PromptModal extends Modal {
     constructor(app: App, onSubmit: (prompt: string) => void) {
         super(app);
         this.onSubmit = onSubmit;
+        this.prompt = "";
     }
 
     onOpen() {
@@ -29,7 +30,6 @@ export class PromptModal extends Modal {
             textArea.inputEl.style.height = textArea.inputEl.scrollHeight + 'px';
         });
 
-        this.registerDomEvent(textArea.inputEl, 'focus', () => {});
         setTimeout(() => textArea.inputEl.focus(), 0);
 
         const controls = contentEl.createEl("div", { cls: "synapse-modal-controls" });

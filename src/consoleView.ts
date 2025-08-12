@@ -8,7 +8,7 @@ export const SYNAPSE_VIEW_TYPE = "synapse-console-view";
 
 export class SynapseConsoleView extends ItemView {
     plugin: SynapsePlugin;
-    promptInput: HTMLTextAreaElement;
+    promptInput!: HTMLTextAreaElement;
     llmService: LLMService;
     contextBuilder: ContextBuilder;
     noteManager: NoteManager;
