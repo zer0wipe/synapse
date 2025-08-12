@@ -12,7 +12,11 @@ This is a plugin for Obsidian. It uses the Google Gemini API to expand on your t
 
 ## Usage
 
-Open the command palette and search for "Synapse".
+1.  Open a note in Obsidian.
+2.  Click the "Synapse" ribbon icon or run the "Synapse: Open Console" command to open the console.
+3.  Enter a thought or prompt to expand on the current note.
+4.  Click "Connect".
+5.  A new note will be generated with the AI's response and linked to the original note.
 
 ## Contributing
 
