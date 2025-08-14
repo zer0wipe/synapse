@@ -58,7 +58,7 @@ export default class SynapsePlugin extends Plugin {
 
     initializeServices() {
         // Initialize with default settings first
-        this.llmService = new LLMService(DEFAULT_SETTINGS.geminiApiKey, DEFAULT_SETTINGS.apiProvider, DEFAULT_SETTINGS.model, DEFAULT_SETTINGS.titleModel);
+        this.llmService = new LLMService(DEFAULT_SETTINGS.geminiApiKey, DEFAULT_SETTINGS.apiProvider, DEFAULT_SETTINGS.model, DEFAULT_SETTINGS.titleModel, DEFAULT_SETTINGS.systemPrompt);
         this.noteManager = new NoteManager(this.app);
         this.contextBuilder = new ContextBuilder(this.app, DEFAULT_SETTINGS.contextDepth);
     }
@@ -66,7 +66,7 @@ export default class SynapsePlugin extends Plugin {
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
         // Update services with loaded settings after they've been initialized
-        this.llmService.updateModelSettings(this.settings.apiProvider, this.settings.model, this.settings.titleModel);
+        this.llmService.updateModelSettings(this.settings.apiProvider, this.settings.model, this.settings.titleModel, this.settings.systemPrompt);
         this.llmService.updateApiKey(this.settings.geminiApiKey);
         this.contextBuilder.updateSettings(this.settings.contextDepth);
 	}
@@ -74,7 +74,7 @@ export default class SynapsePlugin extends Plugin {
 	async saveSettings() {
 		await this.saveData(this.settings);
         // Update services with new settings
-        this.llmService.updateModelSettings(this.settings.apiProvider, this.settings.model, this.settings.titleModel);
+        this.llmService.updateModelSettings(this.settings.apiProvider, this.settings.model, this.settings.titleModel, this.settings.systemPrompt);
         this.llmService.updateApiKey(this.settings.geminiApiKey);
         this.contextBuilder.updateSettings(this.settings.contextDepth);
 	}

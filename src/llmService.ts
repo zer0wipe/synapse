@@ -5,22 +5,25 @@ export class LLMService {
     private apiProvider: string;
     private model: string;
     private titleModel: string;
+    private systemPrompt: string;
 
-    constructor(apiKey: string, apiProvider: string, model: string, titleModel: string) {
+    constructor(apiKey: string, apiProvider: string, model: string, titleModel: string, systemPrompt: string) {
         this.apiKey = apiKey;
         this.apiProvider = apiProvider;
         this.model = model;
         this.titleModel = titleModel;
+        this.systemPrompt = systemPrompt;
     }
 
     public updateApiKey(apiKey: string) {
         this.apiKey = apiKey;
     }
 
-    public updateModelSettings(apiProvider: string, model: string, titleModel: string) {
+    public updateModelSettings(apiProvider: string, model: string, titleModel: string, systemPrompt: string) {
         this.apiProvider = apiProvider;
         this.model = model;
         this.titleModel = titleModel;
+        this.systemPrompt = systemPrompt;
     }
 
     private async callGemini(contents: any[], model: string): Promise<any> {
@@ -53,28 +56,11 @@ export class LLMService {
     async generateResponse(prompt: string, context: string): Promise<{title: string, content: string}> {
         // Currently only supports Gemini. Add logic here to switch based on this.apiProvider
         if (this.apiProvider === 'Gemini') {
-            const systemMessage = `You are Synapse, an AI assistant embedded within a knowledge graph (Obsidian). 
-The user is expanding their thoughts. Analyze the provided context (a chain of previous notes) and respond to the latest prompt. 
-Your response will be saved as a new, linked note. Be insightful and continue the line of reasoning.
-The first line of your response should be a concise, descriptive title (5-10 words) for the note. The rest of the response should be the content of the note.`;
-
             const contents = [
                 {
                     "role": "user",
                     "parts": [
-                        { "text": systemMessage }
-                    ]
-                },
-                {
-                    "role": "model",
-                    "parts": [
-                        { "text": "Okay, I am ready." }
-                    ]
-                },
-                {
-                    "role": "user",
-                    "parts": [
-                        { "text": `[CONTEXT HISTORY START]\n${context}\n[CONTEXT HISTORY END]\n\n[USER PROMPT]\n${prompt}` }
+                        { "text": this.systemPrompt + `\n\n[CONTEXT HISTORY START]\n${context}\n[CONTEXT HISTORY END]\n\n[USER PROMPT]\n${prompt}` }
                     ]
                 }
             ];
@@ -83,11 +69,22 @@ The first line of your response should be a concise, descriptive title (5-10 wor
                 const data = await this.callGemini(contents, this.model);
                 const responseText = data.candidates[0].content.parts[0].text.trim();
                 const firstNewline = responseText.indexOf('\n');
+                let title: string;
+                let content: string;
+
                 if (firstNewline === -1) {
-                    return { title: responseText, content: '' };
+                    // If no newline, take the first 100 characters as title, rest as content (or empty if too short)
+                    title = responseText.substring(0, 100).trim();
+                    content = responseText.substring(100).trim();
+                } else {
+                    title = responseText.substring(0, firstNewline).trim();
+                    content = responseText.substring(firstNewline + 1).trim();
                 }
-                const title = responseText.substring(0, firstNewline).trim();
-                const content = responseText.substring(firstNewline + 1).trim();
+
+                // Ensure title is not excessively long, even if it had a newline
+                if (title.length > 100) {
+                    title = title.substring(0, 100).trim();
+                }
                 return { title, content };
             } catch (error) {
                 console.error("Error generating response:", error);

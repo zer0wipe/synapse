@@ -8,6 +8,7 @@ export interface SynapseSettings {
     titleModel: string;
     newNoteFolder: string;
     contextDepth: number;
+    systemPrompt: string;
 }
 
 export const DEFAULT_SETTINGS: SynapseSettings = {
@@ -16,7 +17,11 @@ export const DEFAULT_SETTINGS: SynapseSettings = {
 	model: 'gemini-1.5-flash',
     titleModel: 'gemini-1.5-flash',
     newNoteFolder: '', // Default to root
-    contextDepth: 5
+    contextDepth: 5,
+    systemPrompt: `You are Synapse, an AI assistant embedded within a knowledge graph (Obsidian). 
+The user is expanding their thoughts. Analyze the provided context (a chain of previous notes) and respond to the latest prompt. 
+Your response will be saved as a new, linked note. Be insightful and continue the line of reasoning.
+The first line of your response should be a concise, descriptive title (5-10 words) for the note. The rest of the response should be the content of the note.`
 }
 
 export class SynapseSettingTab extends PluginSettingTab {
@@ -65,17 +70,6 @@ export class SynapseSettingTab extends PluginSettingTab {
                 }));
 
         new Setting(containerEl)
-            .setName('Title Model')
-            .setDesc('The LLM model to use for generating titles.')
-            .addText(text => text
-                .setPlaceholder('e.g., gemini-1.5-flash')
-                .setValue(this.plugin.settings.titleModel)
-                .onChange(async (value) => {
-                    this.plugin.settings.titleModel = value;
-                    await this.plugin.saveSettings();
-                }));
-
-        new Setting(containerEl)
             .setName('New Note Folder')
             .setDesc('The folder where new conversation notes will be created. If empty, notes will be created in the same folder as the source note.')
             .addText(text => text
@@ -97,5 +91,31 @@ export class SynapseSettingTab extends PluginSettingTab {
                     this.plugin.settings.contextDepth = value;
                     await this.plugin.saveSettings();
                 }));
+
+        const systemPromptSetting = new Setting(containerEl)
+            .setName('System Prompt')
+            .setDesc('Define the system prompt for the AI assistant. This sets the AI\'s persona and instructions.');
+
+        systemPromptSetting.settingEl.style.flexDirection = 'column';
+        systemPromptSetting.settingEl.style.alignItems = 'flex-start'; // Align items to the start when column
+        systemPromptSetting.controlEl.style.width = '100%'; // Make the control element fill the width
+
+        systemPromptSetting.addTextArea(text => {
+            text
+                .setPlaceholder('You are Synapse, an AI assistant...')
+                .setValue(this.plugin.settings.systemPrompt)
+                .onChange(async (value) => {
+                    this.plugin.settings.systemPrompt = value;
+                    await this.plugin.saveSettings();
+                });
+            text.inputEl.style.width = '100%';
+            text.inputEl.style.marginTop = '10px';
+            text.inputEl.style.height = 'auto'; // Set initial height to auto
+            text.inputEl.style.overflowY = 'hidden'; // Hide scrollbar initially
+            text.inputEl.addEventListener('input', () => {
+                text.inputEl.style.height = 'auto';
+                text.inputEl.style.height = text.inputEl.scrollHeight + 'px';
+            });
+        });
 	}
 }
