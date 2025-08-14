@@ -1,22 +1,42 @@
 # Synapse
 
-This is a plugin for Obsidian. It uses the Google Gemini API to expand on your thoughts and create a branching knowledge graph.
+## The Philosophy
 
-**Note:** This plugin requires a Google Gemini API key to function. This is a paid service.
+Linear chat logs are terrible for complex thinking. Ideas aren't linear—they branch, fork, and reconnect. Standard AI chatbots force your sprawling thoughts into a narrow, inflexible timeline. When a conversation is over, it's lost in a separate app, disconnected from your actual knowledge base.
+
+**Synapse fixes this.**
+
+It leverages the core strengths of Obsidian—notes as nodes, links as connections—to create a native, non-linear conversational experience with Large Language Models. Each turn in a conversation becomes a new note, automatically linked to its parent. Your train of thought becomes a tangible, navigable, and permanent part of your digital brain.
+
+* **Conversational AI in Your Vault:** Interact with powerful LLMs directly within Obsidian.
+* **Automatic Note Creation & Linking:** Every AI response generates a new, linked note, building your thought-tree automatically.
+* **Effortless Branching & Forking:** Explore different lines of thought simply by prompting from any previous note. The old paths remain intact.
+* **Context-Aware History:** Synapse automatically sends the current branch's history to the LLM, ensuring relevant and dynamic context while saving tokens and cost.
+* **Native Graph View Integration:** Visualize your branching conversations in real-time using Obsidian's Graph View.
 
 ## Installation
 
-1.  Install the plugin.
-2.  Enable the plugin in Obsidian's settings.
-3.  Add your Google Gemini API key in the plugin settings.
+#### From the Community Plugins Store (Recommended)
 
-## Usage
+1.  Go to `Settings` > `Community plugins`.
+2.  Make sure `Restricted mode` is **off**.
+3.  Click `Browse` and search for "Synapse".
+4.  Click `Install`, and then once it's finished, click `Enable`.
 
-1.  Open a note in Obsidian.
-2.  Click the "Synapse" ribbon icon or run the "Synapse: Open Console" command to open the console.
-3.  Enter a thought or prompt to expand on the current note.
-4.  Click "Connect".
-5.  A new note will be generated with the AI's response and linked to the original note.
+#### Manual Installation
+
+1.  Download the latest release from the [Releases page](https://github.com/zer0wipe/Synapse/releases) on GitHub.
+2.  Unzip the downloaded file.
+3.  Copy the unzipped folder into your Obsidian vault's plugin folder: `<YourVault>/.obsidian/plugins/`.
+4.  Reload Obsidian, go to `Settings` > `Community plugins`, and enable "Synapse".
+
+### Configuration
+
+1.  After enabling the plugin, go to the **Synapse** tab in the `Settings` window.
+2.  **Select your LLM Provider** Currently only Gemini.
+3.  **Enter your API Key.** This is stored locally and securely on your machine.
+4.  Choose your preferred AI Model from the dropdown 
+5.  Configure your preferred hotkey for triggering Synapse for a seamless workflow.
 
 ## Contributing
 
