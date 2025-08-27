@@ -14,35 +14,13 @@ It leverages the core strengths of Obsidian—notes as nodes, links as connectio
 * **Context-Aware History:** Synapse automatically sends the current branch's history to the LLM, ensuring relevant and dynamic context while saving tokens and cost.
 * **Native Graph View Integration:** Visualize your branching conversations in real-time using Obsidian's Graph View.
 
-## Installation
+#### Manual Installation (from source)
 
-#### From the Community Plugins Store (Recommended)
-
-1.  Go to `Settings` > `Community plugins`.
-2.  Make sure `Restricted mode` is **off**.
-3.  Click `Browse` and search for "Synapse".
-4.  Click `Install`, and then once it's finished, click `Enable`.
-
-#### Manual Installation
-
-1.  Download the latest release from the [Releases page](https://github.com/zer0wipe/Synapse/releases) on GitHub.
-2.  Unzip the downloaded file.
-3.  Copy the unzipped folder into your Obsidian vault's plugin folder: `<YourVault>/.obsidian/plugins/`.
-4.  Reload Obsidian, go to `Settings` > `Community plugins`, and enable "Synapse".
-
-### Configuration
-
-1.  After enabling the plugin, go to the **Synapse** tab in the `Settings` window.
-2.  **Select your LLM Provider** Currently only Gemini.
-3.  **Enter your API Key.** This is stored locally and securely on your machine.
-4.  Choose your preferred AI Model from the dropdown 
-5.  Configure your preferred hotkey for triggering Synapse for a seamless workflow.
-
-## Contributing
-
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
-
-Please make sure to update tests as appropriate.
+1.  Clone this repository into your Obsidian vault's plugin folder: `<YourVault>/.obsidian/plugins/synapse`.
+2.  Navigate to the plugin directory: `cd <YourVault>/.obsidian/plugins/synapse`.
+3.  Install dependencies: `npm install`.
+4.  Build the plugin: `npm run build`.
+5.  Reload Obsidian, go to `Settings` > `Community plugins`, and enable "Synapse".
 
 ## License
 
