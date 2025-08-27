@@ -1,4 +1,4 @@
-import { Plugin, Notice, TFile, WorkspaceLeaf } from 'obsidian';
+import { Plugin, Notice, TFile } from 'obsidian';
 import { SynapseSettings, DEFAULT_SETTINGS, SynapseSettingTab } from './src/settings';
 import { LLMService } from './src/llmService';
 import { NoteManager } from './src/noteManager';
@@ -17,7 +17,7 @@ export default class SynapsePlugin extends Plugin {
 
 		await this.loadSettings(); // Load user settings, which will then update services
 		
-        this.loadStyles();
+        await this.loadStyles();
 
 		this.addSettingTab(new SynapseSettingTab(this.app, this));
 
@@ -49,11 +49,25 @@ export default class SynapsePlugin extends Plugin {
     }
 
     async loadStyles() {
-        const css = await this.app.vault.adapter.read(`${this.app.vault.configDir}/plugins/synapse/src/styles.css`);
-        const styleEl = document.createElement('style');
-        styleEl.id = 'synapse-styles';
-        styleEl.innerHTML = css;
-        document.head.appendChild(styleEl);
+        // Try to load styles from the plugin root first (recommended distribution layout),
+        // then fall back to src/ for dev environments.
+        const pluginDir = `${this.app.vault.configDir}/plugins/${this.manifest.id}`;
+        const candidates = [
+            `${pluginDir}/styles.css`,
+            `${pluginDir}/src/styles.css`,
+        ];
+        for (const path of candidates) {
+            try {
+                const css = await this.app.vault.adapter.read(path);
+                const styleEl = document.createElement('style');
+                styleEl.id = 'synapse-styles';
+                styleEl.innerHTML = css;
+                document.head.appendChild(styleEl);
+                return;
+            } catch (_) {
+                // try next candidate
+            }
+        }
     }
 
     initializeServices() {

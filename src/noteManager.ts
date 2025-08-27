@@ -1,4 +1,4 @@
-import { App, TFile, normalizePath, MarkdownView } from 'obsidian';
+import { App, TFile, normalizePath, MarkdownView, parseYaml, stringifyYaml } from 'obsidian';
 
 export class NoteManager {
     private app: App;
@@ -43,18 +43,30 @@ export class NoteManager {
     }
 
     async linkNoteAtCursor(newFile: TFile, sourceFile: TFile) {
-        const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+        const linkText = this.app.fileManager.generateMarkdownLink(newFile, sourceFile.path);
+        const currentContent = await this.app.vault.read(sourceFile);
 
-        if (activeView && activeView.file?.path === sourceFile.path) {
-            const editor = activeView.editor;
-            const linkText = this.app.fileManager.generateMarkdownLink(newFile, sourceFile.path);
-            
-            // Insert the link at the cursor position, ensuring separation
-            editor.replaceSelection(`\n\n${linkText}\n\n`);
-        } else {
-            // Fallback if the source file is not the active view (e.g., if the process was slow and the user switched notes)
-            const linkText = `\n\n[[${newFile.basename}]]\n\n`;
-            await this.app.vault.append(sourceFile, linkText);
+        let frontmatter = {};
+        let contentWithoutFrontmatter = currentContent;
+        const frontmatterMatch = currentContent.match(/^---\n(.*?)\n---\n(.*)/s);
+
+        if (frontmatterMatch) {
+            frontmatter = parseYaml(frontmatterMatch[1]) || {};
+            contentWithoutFrontmatter = frontmatterMatch[2];
         }
+
+        // Ensure the 'synapse-links' array exists
+        if (!frontmatter['synapse-links']) {
+            frontmatter['synapse-links'] = [];
+        }
+        // Add the new link if it's not already present
+        if (!frontmatter['synapse-links'].includes(linkText)) {
+            frontmatter['synapse-links'].push(linkText);
+        }
+
+        const newFrontmatter = `---\n${stringifyYaml(frontmatter)}---\n`;
+        const newContent = newFrontmatter + contentWithoutFrontmatter;
+
+        await this.app.vault.modify(sourceFile, newContent);
     }
 }

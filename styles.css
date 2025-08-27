@@ -1,0 +1,32 @@
+.synapse-modal-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.synapse-modal-header {
+    padding: 10px;
+    border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.synapse-modal-text-container {
+    flex-grow: 1;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.synapse-modal-text-container textarea {
+    resize: none;
+}
+
+.synapse-modal-controls {
+    display: flex;
+    justify-content: flex-end;
+    padding: 10px;
+    border-top: 1px solid var(--background-modifier-border);
+}
+
+.synapse-modal-controls button {
+    margin-left: 10px;
+}

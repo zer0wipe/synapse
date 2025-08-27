@@ -46,10 +46,9 @@ export class LLMService {
             return JSON.parse(response);
         } catch (error) {
             console.error("Error calling Gemini API:", error);
-            if (error instanceof Error) {
-                new Notice(`Failed to call Gemini API. ${error.message}`);
-                throw new Error(`Failed to call Gemini API. ${error.message}`);
-            }
+            const message = error instanceof Error ? error.message : String(error);
+            new Notice(`Failed to call Gemini API. ${message}`);
+            throw new Error(`Failed to call Gemini API. ${message}`);
         }
     }
 
@@ -67,7 +66,12 @@ export class LLMService {
 
             try {
                 const data = await this.callGemini(contents, this.model);
-                const responseText = data.candidates[0].content.parts[0].text.trim();
+                const responseText = String(
+                    data?.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
+                ).trim();
+                if (!responseText) {
+                    throw new Error('No content returned from model');
+                }
                 const firstNewline = responseText.indexOf('\n');
                 let title: string;
                 let content: string;

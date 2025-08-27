@@ -37,8 +37,9 @@ export class ContextBuilder {
         let contextString = "";
         for (const file of contextChain) {
             const content = await this.app.vault.read(file);
-            // This regex removes all Markdown links.
-            const contentWithoutLinks = content.replace(/[[.*?]]/g, '');
+            // Remove Obsidian wiki-links like [[...]] to avoid leaking link noise into LLM context.
+            // Use a non-greedy match inside double brackets.
+            const contentWithoutLinks = content.replace(/\[\[[^\]]+\]\]/g, '');
             contextString += `--- [Note: ${file.basename}] ---
 ${contentWithoutLinks}
 
