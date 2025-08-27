@@ -69,7 +69,7 @@ export class ContextBuilder {
             const content = await this.app.vault.read(file);
             // Remove Obsidian wiki-links (e.g., [[Link Name]]) to avoid leaking link noise into the LLM context.
             // A non-greedy regex is used to match content inside double brackets.
-            const contentWithoutLinks = content.replace(/[[^]]+/g, '');
+            const contentWithoutLinks = content.replace(/\[\[.*?\]\]/g, '');
             contextString += `--- [Note: ${file.basename}] ---
 ${contentWithoutLinks}\n\n`;
         }
@@ -105,8 +105,9 @@ ${contentWithoutLinks}\n\n`;
     private getBacklinks(file: TFile): TFile[] {
         const backlinks: TFile[] = [];
         
-        // Method 1: Using the undocumented getBacklinksForFile (more efficient and direct).
-        // This method is not officially part of the Obsidian API and might change.
+        // Method 1: Attempt to use the undocumented `getBacklinksForFile` method for efficiency.
+        // WARNING: This is an undocumented API and may break in future Obsidian updates.
+        // It provides a direct way to get backlinks, which is more performant than iterating `resolvedLinks`.
         if ((this.app.metadataCache as any).getBacklinksForFile) {
             const backlinkData = (this.app.metadataCache as any).getBacklinksForFile(file);
             if (backlinkData) {

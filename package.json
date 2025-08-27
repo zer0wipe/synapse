@@ -1,15 +1,15 @@
 {
   "name": "synapse",
   "version": "1.0.0",
-  "description": "",
+  "description": "An active environment to grow thoughts. Treats notes as an evolving, interactive conversation with an LLM, creating a branching knowledge graph.",
   "main": "main.js",
   "scripts": {
     "dev": "node build.js --watch",
     "build": "node build.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["obsidian", "plugin", "llm", "ai", "knowledge graph", "gemini"],
+  "author": "zer0wipe",
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^24.2.1",

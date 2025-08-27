@@ -75,14 +75,16 @@ export class SynapseSettingTab extends PluginSettingTab {
         // Setting for Gemini API Key
         new Setting(containerEl)
             .setName('Gemini API Key')
-            .setDesc('Enter your Gemini API key. This is required to use the Gemini LLM.')
-            .addText(text => text
-                .setPlaceholder('Enter your secret key')
-                .setValue(this.plugin.settings.geminiApiKey)
-                .onChange(async (value) => {
-                    this.plugin.settings.geminiApiKey = value;
-                    await this.plugin.saveSettings(); // Save settings immediately on change.
-                }));
+            .setDesc('Enter your Gemini API Key. This is required to use the Gemini LLM. WARNING: This key will be stored unencrypted in your plugin\'s data file.')
+            .addText(text => {
+                text.inputEl.type = 'password'; // Set input type to password
+                text.setPlaceholder('Enter your secret key')
+                    .setValue(this.plugin.settings.geminiApiKey)
+                    .onChange(async (value) => {
+                        this.plugin.settings.geminiApiKey = value;
+                        await this.plugin.saveSettings(); // Save settings immediately on change.
+                    });
+            });
 
         // Setting for API Provider selection
         new Setting(containerEl)
