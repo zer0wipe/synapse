@@ -1,5 +1,6 @@
 .env
 node_modules
+!build.js
 *.js
 *.js.map
 data.json
