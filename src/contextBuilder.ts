@@ -20,11 +20,10 @@ export class ContextBuilder {
     /**
      * Constructs a new ContextBuilder instance.
      * @param app The Obsidian App instance.
-     * @param maxDepth The maximum number of backlinks to traverse.
      */
-    constructor(app: App, maxDepth: number) {
+    constructor(app: App) {
         this.app = app;
-        this.maxDepth = maxDepth;
+        this.maxDepth = 5; // Default value
     }
 
     /**

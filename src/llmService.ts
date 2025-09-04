@@ -6,59 +6,29 @@
  * and parsing the LLM's responses into a structured format (title and content for a new note).
  */
 import { request, RequestUrlParam, Notice } from 'obsidian';
+import { SynapseSettings } from '../src/settings';
 
 /**
  * Manages communication with configured Large Language Models.
  * Currently supports the Gemini API.
  */
 export class LLMService {
-    // The API key for the selected LLM provider (e.g., Gemini API key).
-    private apiKey: string;
-    // The identifier for the chosen API provider (e.g., 'Gemini').
-    private apiProvider: string;
-    // The specific LLM model to use for generating note content.
-    private model: string;
-    // The specific LLM model to use for generating note titles.
-    private titleModel: string;
-    // The system-level prompt that defines the AI's persona and instructions.
-    private systemPrompt: string;
+    private settings: SynapseSettings;
 
     /**
      * Constructs a new LLMService instance.
-     * @param apiKey The API key for the LLM provider.
-     * @param apiProvider The name of the API provider.
-     * @param model The primary LLM model to use.
-     * @param titleModel The LLM model to use specifically for titles.
-     * @param systemPrompt The system prompt for the LLM.
+     * @param settings The plugin settings.
      */
-    constructor(apiKey: string, apiProvider: string, model: string, titleModel: string, systemPrompt: string) {
-        this.apiKey = apiKey;
-        this.apiProvider = apiProvider;
-        this.model = model;
-        this.titleModel = titleModel;
-        this.systemPrompt = systemPrompt;
+    constructor(settings: SynapseSettings) {
+        this.settings = settings;
     }
 
     /**
-     * Updates the API key for the LLM service.
-     * @param apiKey The new API key.
+     * Updates the settings for the LLM service.
+     * @param settings The new plugin settings.
      */
-    public updateApiKey(apiKey: string) {
-        this.apiKey = apiKey;
-    }
-
-    /**
-     * Updates the model-related settings for the LLM service.
-     * @param apiProvider The new API provider.
-     * @param model The new primary LLM model.
-     * @param titleModel The new title generation LLM model.
-     * @param systemPrompt The new system prompt.
-     */
-    public updateModelSettings(apiProvider: string, model: string, titleModel: string, systemPrompt: string) {
-        this.apiProvider = apiProvider;
-        this.model = model;
-        this.titleModel = titleModel;
-        this.systemPrompt = systemPrompt;
+    public updateSettings(settings: SynapseSettings) {
+        this.settings = settings;
     }
 
     /**
@@ -70,14 +40,14 @@ export class LLMService {
      */
     private async callGemini(contents: any[], model: string): Promise<any> {
         // Validate that an API key is set before making a request.
-        if (!this.apiKey) {
+        if (!this.settings.geminiApiKey) {
             new Notice("Gemini API key is not set in the plugin settings.");
             throw new Error("Gemini API key is not set in the plugin settings.");
         }
 
         // Configure the request options for the Gemini API.
         const requestOptions: RequestUrlParam = {
-            url: `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${this.apiKey}`,
+            url: `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${this.settings.geminiApiKey}`,
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -109,20 +79,20 @@ export class LLMService {
      */
     async generateResponse(prompt: string, context: string): Promise<{title: string, content: string}> {
         // Currently, only Gemini is supported. This block would be extended for other providers.
-        if (this.apiProvider === 'Gemini') {
+        if (this.settings.apiProvider === 'Gemini') {
             // Construct the content payload for the Gemini API, including system prompt, context, and user prompt.
             const contents = [
                 {
                     "role": "user",
                     "parts": [
-                        { "text": this.systemPrompt + `\n\n[CONTEXT HISTORY START]\n${context}\n[CONTEXT HISTORY END]\n\n[USER PROMPT]\n${prompt}` }
+                        { "text": this.settings.systemPrompt + `\n\n[CONTEXT HISTORY START]\n${context}\n[CONTEXT HISTORY END]\n\n[USER PROMPT]\n${prompt}` }
                     ]
                 }
             ];
 
             try {
                 // Call the Gemini API and extract the response text.
-                const data = await this.callGemini(contents, this.model);
+                const data = await this.callGemini(contents, this.settings.model);
                 const responseText = String(
                     data?.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
                 ).trim();
@@ -159,8 +129,8 @@ export class LLMService {
             }
         } else {
             // Handle unsupported API providers.
-            new Notice(`Unsupported API Provider: ${this.apiProvider}`);
-            throw new Error(`Unsupported API Provider: ${this.apiProvider}`);
+            new Notice(`Unsupported API Provider: ${this.settings.apiProvider}`);
+            throw new Error(`Unsupported API Provider: ${this.settings.apiProvider}`);
         }
     }
 }
