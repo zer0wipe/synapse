@@ -8,7 +8,7 @@
     "build": "node build.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["obsidian", "plugin", "llm", "ai", "knowledge graph", "gemini"],
+  "keywords": ["obsidian", "plugin", "llm", "ai", "knowledge graph", "ollama"],
   "author": "zer0wipe",
   "license": "MIT",
   "devDependencies": {

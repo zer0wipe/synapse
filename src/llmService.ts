@@ -10,7 +10,7 @@ import { SynapseSettings } from '../src/settings';
 
 /**
  * Manages communication with configured Large Language Models.
- * Currently supports the Gemini API.
+ * Currently supports the Ollama API.
  */
 export class LLMService {
     private settings: SynapseSettings;
@@ -32,27 +32,31 @@ export class LLMService {
     }
 
     /**
-     * Makes an asynchronous API call to the Gemini LLM.
-     * @param contents The content payload to send to the Gemini API.
-     * @param model The specific Gemini model to call.
-     * @returns The parsed JSON response from the Gemini API.
-     * @throws An error if the API key is not set or if the API call fails.
+     * Makes an asynchronous API call to the Ollama LLM.
+     * @param prompt The prompt to send to the Ollama API.
+     * @param model The specific Ollama model to call.
+     * @returns The parsed JSON response from the Ollama API.
+     * @throws An error if the API endpoint is not set or if the API call fails.
      */
-    private async callGemini(contents: any[], model: string): Promise<any> {
-        // Validate that an API key is set before making a request.
-        if (!this.settings.geminiApiKey) {
-            new Notice("Gemini API key is not set in the plugin settings.");
-            throw new Error("Gemini API key is not set in the plugin settings.");
+    private async callOllama(prompt: string, model: string): Promise<any> {
+        // Validate that an API endpoint is set before making a request.
+        if (!this.settings.ollamaEndpoint) {
+            new Notice("Ollama endpoint is not set in the plugin settings.");
+            throw new Error("Ollama endpoint is not set in the plugin settings.");
         }
 
-        // Configure the request options for the Gemini API.
+        // Configure the request options for the Ollama API.
         const requestOptions: RequestUrlParam = {
-            url: `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${this.settings.geminiApiKey}`,
+            url: `${this.settings.ollamaEndpoint}/api/generate`,
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ contents }) // Convert the content payload to a JSON string.
+            body: JSON.stringify({
+                model: model,
+                prompt: prompt,
+                stream: false
+            })
         };
 
         try {
@@ -61,10 +65,10 @@ export class LLMService {
             return JSON.parse(response);
         } catch (error) {
             // Log and notify the user of any API call errors.
-            console.error("Error calling Gemini API:", error);
+            console.error("Error calling Ollama API:", error);
             const message = error instanceof Error ? error.message : String(error);
-            new Notice(`Failed to call Gemini API. ${message}`);
-            throw new Error(`Failed to call Gemini API. ${message}`);
+            new Notice(`Failed to call Ollama API. ${message}`);
+            throw new Error(`Failed to call Ollama API. ${message}`);
         }
     }
 
@@ -78,24 +82,16 @@ export class LLMService {
      * @throws An error if the API provider is unsupported or if the LLM response is empty/invalid.
      */
     async generateResponse(prompt: string, context: string): Promise<{title: string, content: string}> {
-        // Currently, only Gemini is supported. This block would be extended for other providers.
-        if (this.settings.apiProvider === 'Gemini') {
-            // Construct the content payload for the Gemini API, including system prompt, context, and user prompt.
-            const contents = [
-                {
-                    "role": "user",
-                    "parts": [
-                        { "text": this.settings.systemPrompt + `\n\n[CONTEXT HISTORY START]\n${context}\n[CONTEXT HISTORY END]\n\n[USER PROMPT]\n${prompt}` }
-                    ]
-                }
-            ];
+        // Currently, only Ollama is supported. This block would be extended for other providers.
+        if (this.settings.apiProvider === 'Ollama') {
+            // Construct the prompt for the Ollama API, including system prompt, context, and user prompt.
+            const fullPrompt = this.settings.systemPrompt + 
+                `\n\n[CONTEXT HISTORY START]\n${context}\n[CONTEXT HISTORY END]\n\n[USER PROMPT]\n${prompt}`;
 
             try {
-                // Call the Gemini API and extract the response text.
-                const data = await this.callGemini(contents, this.settings.model);
-                const responseText = String(
-                    data?.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
-                ).trim();
+                // Call the Ollama API and extract the response text.
+                const data = await this.callOllama(fullPrompt, this.settings.model);
+                const responseText = String(data?.response ?? '').trim();
                 
                 if (!responseText) {
                     throw new Error('No content returned from model');
@@ -124,8 +120,8 @@ export class LLMService {
             } catch (error) {
                 // Handle errors during response generation.
                 console.error("Error generating response:", error);
-                new Notice("Failed to generate response from Gemini.");
-                throw new Error("Failed to generate response from Gemini.");
+                new Notice("Failed to generate response from Ollama.");
+                throw new Error("Failed to generate response from Ollama.");
             }
         } else {
             // Handle unsupported API providers.
