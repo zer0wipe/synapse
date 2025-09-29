@@ -1,0 +1,139 @@
+/**
+ * branchModal.ts
+ * 
+ * This module implements the branching modal interface that allows users to
+ * interactively select notes to build their context chain.
+ */
+import { App, Modal, TFile, setIcon } from 'obsidian';
+
+export class BranchModal extends Modal {
+    private currentNote: TFile;
+    private selectedNotes: TFile[] = [];
+    private onComplete: (notes: TFile[]) => void;
+
+    constructor(app: App, startNote: TFile, onComplete: (notes: TFile[]) => void) {
+        super(app);
+        this.currentNote = startNote;
+        this.selectedNotes = [startNote]; // Start with the current note
+        this.onComplete = onComplete;
+    }
+
+    async onOpen() {
+        const { contentEl } = this;
+        await this.updateModalContent();
+    }
+
+    private async updateModalContent() {
+        const { contentEl } = this;
+        contentEl.empty();
+
+        // Header
+        const headerEl = contentEl.createDiv('modal-header');
+        headerEl.createEl('h2', { text: 'Branch Context' });
+
+        // Current chain
+        const chainEl = contentEl.createDiv('chain-container');
+        chainEl.createEl('h3', { text: 'Selected Chain:' });
+        const chainList = chainEl.createEl('ul');
+        this.selectedNotes.forEach(note => {
+            const li = chainList.createEl('li');
+            li.setText(note.basename);
+        });
+
+        // Current note info
+        const currentNoteEl = contentEl.createDiv('current-note');
+        currentNoteEl.createEl('h3', { text: `Current Note: ${this.currentNote.basename}` });
+
+        // Links container
+        const linksEl = contentEl.createDiv('links-container');
+        
+        // Inbound links
+        const inboundEl = linksEl.createDiv('inbound-links');
+        inboundEl.createEl('h4', { text: 'Inbound Links:' });
+        const inboundLinks = this.getInboundLinks(this.currentNote);
+        const inboundList = inboundEl.createEl('ul');
+        if (inboundLinks.length === 0) {
+            const li = inboundList.createEl('li');
+            li.setText('No inbound links');
+            li.addClass('no-links');
+        } else {
+            inboundLinks.forEach(link => {
+                const li = inboundList.createEl('li');
+                const btn = li.createEl('button');
+                btn.setText(link.basename);
+                btn.onclick = () => this.selectNote(link);
+            });
+        }
+
+        // Outbound links
+        const outboundEl = linksEl.createDiv('outbound-links');
+        outboundEl.createEl('h4', { text: 'Outbound Links:' });
+        const outboundLinks = await this.getOutboundLinks(this.currentNote);
+        const outboundList = outboundEl.createEl('ul');
+        outboundLinks.forEach(link => {
+            const li = outboundList.createEl('li');
+            const btn = li.createEl('button');
+            btn.setText(link.basename);
+            btn.onclick = () => this.selectNote(link);
+        });
+
+        // Action buttons
+        const actionsEl = contentEl.createDiv('modal-actions');
+        
+        const finishBtn = actionsEl.createEl('button', {
+            text: 'Stop here – use current chain'
+        });
+        finishBtn.onclick = () => {
+            this.finish();
+        };
+    }
+
+    private getInboundLinks(file: TFile): TFile[] {
+        // Get the resolved backlinks from the metadata cache
+        const resolvedLinks = this.app.metadataCache.resolvedLinks;
+        const inboundLinks: TFile[] = [];
+
+        // Look through all files in the metadata cache
+        for (const [sourcePath, links] of Object.entries(resolvedLinks)) {
+            // If this file has a link to our target file
+            if (links[file.path]) {
+                const sourceFile = this.app.vault.getAbstractFileByPath(sourcePath);
+                if (sourceFile instanceof TFile) {
+                    inboundLinks.push(sourceFile);
+                }
+            }
+        }
+        
+        return inboundLinks;
+    }
+
+    private async getOutboundLinks(file: TFile): Promise<TFile[]> {
+        // Get the file's content and parse for wiki-links
+        const content = await this.app.vault.read(file);
+        const matches = Array.from(content.matchAll(/\[\[(.*?)\]\]/g));
+        
+        // Resolve the links to actual TFiles
+        const links = matches
+            .map(match => match[1].split('|')[0]) // Handle [[Link|Alias]] format
+            .map(link => this.app.metadataCache.getFirstLinkpathDest(link, file.path))
+            .filter((file): file is TFile => file instanceof TFile);
+            
+        return Array.from(new Set(links)); // Remove duplicates
+    }
+
+    private selectNote(note: TFile) {
+        this.selectedNotes.push(note);
+        this.currentNote = note;
+        this.updateModalContent();
+    }
+
+    private finish() {
+        this.onComplete(this.selectedNotes);
+        this.close();
+    }
+
+    onClose() {
+        const { contentEl } = this;
+        contentEl.empty();
+    }
+}

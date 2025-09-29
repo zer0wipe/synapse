@@ -5,7 +5,7 @@
  * interface for interacting with the Synapse plugin, allowing them to input prompts
  * and trigger the thought processing workflow.
  */
-import { ItemView, WorkspaceLeaf, Setting, Notice, ButtonComponent } from 'obsidian';
+import { ItemView, WorkspaceLeaf, Setting, Notice, ButtonComponent, TFile } from 'obsidian';
 import SynapsePlugin from '../main';
 import { LLMService } from './llmService';
 import { ContextBuilder } from './contextBuilder';
@@ -31,6 +31,8 @@ export class SynapseConsoleView extends ItemView {
     contextBuilder: ContextBuilder;
     // Instance of the note manager service
     noteManager: NoteManager;
+    // Array of selected notes for branching context
+    selectedNotes?: TFile[];
 
     /**
      * Constructs a new SynapseConsoleView.
@@ -93,6 +95,20 @@ export class SynapseConsoleView extends ItemView {
                 this.leaf.detach(); // Close the view
             });
 
+        // "Branch" button to start the branching workflow
+        const branchButton = new ButtonComponent(controls);
+        branchButton
+            .setButtonText("Branch")
+            .setIcon("git-branch")
+            .onClick(() => {
+                const activeFile = this.app.workspace.getActiveFile();
+                if (!activeFile) {
+                    new Notice("No active note. Please open a note first.");
+                    return;
+                }
+                this.plugin.startBranching();
+            });
+
         // "Connect" button to process the prompt.
         const connectButton = new ButtonComponent(controls);
         connectButton
@@ -121,6 +137,7 @@ export class SynapseConsoleView extends ItemView {
      * Processes the user's prompt.
      * It retrieves the prompt, clears the input, checks for an active file,
      * and then delegates the actual thought processing to the main plugin instance.
+     * @param selectedNotes Optional array of notes selected through branching
      */
     async processPrompt() {
         const prompt = this.promptInput.value;
@@ -137,6 +154,14 @@ export class SynapseConsoleView extends ItemView {
 
         // Delegate the core thought processing logic to the main plugin.
         // This keeps the view focused on UI and input handling.
-        this.plugin.processThought(prompt, activeFile);
+        this.plugin.processThought(prompt, activeFile, this.selectedNotes);
+    }
+    
+    /**
+     * Sets the array of selected notes for branched context building.
+     * @param notes The array of notes selected through the branching modal.
+     */
+    setSelectedNotes(notes: TFile[]) {
+        this.selectedNotes = notes;
     }
 }

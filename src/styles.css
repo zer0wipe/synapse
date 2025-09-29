@@ -4,3 +4,132 @@
  * This file contains the custom CSS styles for the Synapse Obsidian plugin.
  * It defines the visual appearance and layout for the Synapse console view and modal components.
  */
+
+/* Branch Modal styles */
+.branch-modal {
+    max-width: 600px;
+    padding: 20px;
+}
+
+.branch-modal .modal-header h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 1.4em;
+    color: var(--text-normal);
+}
+
+.branch-modal .chain-container {
+    margin-bottom: 20px;
+    padding: 10px;
+    border-radius: 4px;
+    background: var(--background-secondary);
+}
+
+.branch-modal .chain-container h3 {
+    margin: 0 0 10px 0;
+    font-size: 1.1em;
+    color: var(--text-accent);
+}
+
+.branch-modal .chain-container ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+}
+
+.branch-modal .chain-container li {
+    padding: 5px 10px;
+    margin: 5px 0;
+    border-radius: 4px;
+    background: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+}
+
+.branch-modal .current-note {
+    margin-bottom: 20px;
+    padding: 10px;
+    border-radius: 4px;
+    background: var(--background-primary-alt);
+    border-left: 4px solid var(--text-accent);
+}
+
+.branch-modal .current-note h3 {
+    margin: 0;
+    font-size: 1.1em;
+}
+
+.branch-modal .links-container {
+    display: flex;
+    gap: 20px;
+}
+
+.branch-modal .inbound-links,
+.branch-modal .outbound-links {
+    flex: 1;
+    background: var(--background-secondary);
+    padding: 15px;
+    border-radius: 4px;
+}
+
+.branch-modal .links-container h4 {
+    margin: 0 0 10px 0;
+    font-size: 1em;
+    color: var(--text-accent);
+}
+
+.branch-modal .links-container ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+}
+
+.branch-modal .links-container button {
+    width: 100%;
+    text-align: left;
+    padding: 5px 10px;
+    margin: 5px 0;
+    background: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--text-normal);
+    transition: all 0.2s ease;
+}
+
+.branch-modal .links-container button:hover {
+    background: var(--background-modifier-hover);
+    border-color: var(--text-accent);
+}
+
+.branch-modal .links-container .no-links {
+    color: var(--text-muted);
+    font-style: italic;
+    padding: 5px 10px;
+}
+
+.branch-modal .modal-actions,
+.synapse-modal-controls {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.branch-modal .modal-actions button,
+.synapse-modal-controls button {
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.branch-modal .modal-actions button:hover,
+.synapse-modal-controls button:hover {
+    opacity: 0.9;
+}
+
+.synapse-modal-controls button .lucide-git-branch {
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
+}

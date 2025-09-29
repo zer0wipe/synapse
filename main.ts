@@ -11,6 +11,7 @@ import { LLMService } from './src/llmService';
 import { NoteManager } from './src/noteManager';
 import { ContextBuilder } from './src/contextBuilder';
 import { SynapseConsoleView, SYNAPSE_VIEW_TYPE } from './src/consoleView';
+import { BranchModal } from './src/branchModal';
 
 /**
  * The main class for the Synapse plugin. Extends Obsidian's Plugin class.
@@ -49,19 +50,33 @@ export default class SynapsePlugin extends Plugin {
             (leaf) => new SynapseConsoleView(leaf, this)
         );
 
-        // Add a ribbon icon to the Obsidian sidebar to quickly open the Synapse console.
-        this.addRibbonIcon('brain-circuit', 'Synapse', () => {
+        // Add a ribbon icon for the console
+        this.addRibbonIcon('brain-circuit', 'Open Synapse Console', () => {
             this.activateView();
         });
 
-		// Register a command to open the Synapse console via the command palette.
+        // Add a ribbon icon for branching
+        this.addRibbonIcon('git-branch', 'Branch Context', () => {
+            this.startBranching();
+        });
+
+		// Register the console command
 		this.addCommand({
 			id: 'open-synapse-console',
-			name: 'Synapse: Open Console',
+			name: 'Open Console',
             callback: () => {
                 this.activateView();
             }
 		});
+
+        // Register the branch command
+        this.addCommand({
+            id: 'start-branch',
+            name: 'Branch Context',
+            callback: () => {
+                this.startBranching();
+            }
+        });
 	}
 
     /**
@@ -157,41 +172,114 @@ export default class SynapsePlugin extends Plugin {
     }
 
     /**
-     * Orchestrates the main thought processing workflow.
-     * This involves building context, generating an LLM response, creating a new note,
-     * and linking it to the active note via frontmatter.
-     * @param prompt The user's input prompt for the LLM.
-     * @param activeFile The currently active Obsidian note (the source of the thought).
+     * Starts the branching workflow for building context from the active note.
      */
-    async processThought(prompt: string, activeFile: TFile) {
-        // Display a notice to the user indicating that context is being built.
-        const thinkingNotice = new Notice("Synapse is building context...", 0);
+    async startBranching() {
+        const activeFile = this.app.workspace.getActiveFile();
+        if (!activeFile) {
+            new Notice("No active note. Please open a note first.");
+            return;
+        }
+
+        // Open the branch modal to let the user select notes
+        new BranchModal(this.app, activeFile, (selectedNotes) => {
+            // When the user finishes selecting notes, build context from them
+            this.processThoughtWithBranch(selectedNotes);
+        }).open();
+    }
+
+    /**
+     * Processes a thought using an explicitly selected chain of notes for context.
+     * @param notes The array of notes selected by the user for building context.
+     */
+    async processThoughtWithBranch(notes: TFile[]) {
+        if (notes.length === 0) {
+            new Notice("No notes selected for context.");
+            return;
+        }
+
+        const focusNote = notes[0]; // The first note is our focus note
+        const thinkingNotice = new Notice("Building context from selected notes...", 0);
 
         try {
-            // 1. Build Context: Gather relevant information from linked notes to provide to the LLM.
-            const context = await this.contextBuilder.buildContext(activeFile);
-            thinkingNotice.setMessage("Synapse is generating response...");
+            // Build context string from the selected notes
+            let contextString = "";
+            for (const note of notes) {
+                const content = await this.app.vault.read(note);
+                // Remove wiki-links to avoid leaking link noise
+                const contentWithoutLinks = content.replace(/\[\[.*?\]\]/g, '');
+                contextString += `--- [Note: ${note.basename}] ---\n${contentWithoutLinks}\n\n`;
+            }
 
-            // 2. Generate Response: Send the prompt and context to the LLM to get a title and content for the new note.
-            const { title, content } = await this.llmService.generateResponse(prompt, context);
-
-            // 3. Create New Note: Create a new Obsidian note with the generated title and content.
-            const newNote = await this.noteManager.createNote(title, content, this.settings.newNoteFolder, activeFile);
-
-            // 4. Link New Note in Frontmatter: Add a link to the newly created note in the source note's frontmatter.
-            await this.noteManager.addLinkToNoteFrontmatter(newNote, activeFile);
-
-            // Hide the thinking notice and show a success message.
             thinkingNotice.hide();
-            new Notice("Thought expanded. Check your graph view!");
+            
+            // Open/focus the console view to get the prompt
+            await this.activateView();
+            
+            // Get the active console view
+            const leaves = this.app.workspace.getLeavesOfType(SYNAPSE_VIEW_TYPE);
+            const consoleView = leaves[0]?.view as SynapseConsoleView;
+            if (consoleView) {
+                consoleView.setSelectedNotes(notes);
+            } else {
+                new Notice("Failed to open the console view. Please try again.");
+            }
 
         } catch (error) {
-            // Handle any errors during the thought processing, displaying a notice to the user.
             console.error("Synapse Error:", error);
             thinkingNotice.hide();
             if (error instanceof Error) {
                 new Notice(`Error: ${error.message}`);
             }
         }
+    }
+
+    /**
+     * The main thought processing workflow, now supporting both automatic backlink traversal
+     * and explicit note selection via branching.
+     */
+    async processThought(prompt: string, activeFile: TFile, selectedNotes?: TFile[]) {
+        const thinkingNotice = new Notice("Building context...", 0);
+
+        try {
+            let context: string;
+
+            if (selectedNotes && selectedNotes.length > 0) {
+                // Use explicitly selected notes for context
+                context = await this.buildBranchedContext(selectedNotes);
+            } else {
+                // Fall back to automatic backlink traversal
+                context = await this.contextBuilder.buildContext(activeFile);
+            }
+
+            thinkingNotice.setMessage("Generating response...");
+
+            const { title, content } = await this.llmService.generateResponse(prompt, context);
+            const newNote = await this.noteManager.createNote(title, content, this.settings.newNoteFolder, activeFile);
+            await this.noteManager.addLinkToNoteFrontmatter(newNote, activeFile);
+
+            thinkingNotice.hide();
+            new Notice("Thought expanded. Check your graph view!");
+
+        } catch (error) {
+            console.error("Synapse Error:", error);
+            thinkingNotice.hide();
+            if (error instanceof Error) {
+                new Notice(`Error: ${error.message}`);
+            }
+        }
+    }
+
+    /**
+     * Builds context from an explicitly selected chain of notes.
+     */
+    private async buildBranchedContext(notes: TFile[]): Promise<string> {
+        let contextString = "";
+        for (const note of notes) {
+            const content = await this.app.vault.read(note);
+            const contentWithoutLinks = content.replace(/\[\[.*?\]\]/g, '');
+            contextString += `--- [Note: ${note.basename}] ---\n${contentWithoutLinks}\n\n`;
+        }
+        return contextString;
     }
 }
