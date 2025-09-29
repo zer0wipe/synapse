@@ -92,6 +92,7 @@ export class SynapseConsoleView extends ItemView {
             .setButtonText("Nevermind")
             .onClick(() => {
                 this.clearPrompt();
+                this.selectedNotes = undefined; // Clear selected notes
                 this.leaf.detach(); // Close the view
             });
 
@@ -123,7 +124,8 @@ export class SynapseConsoleView extends ItemView {
      * Called when the view is closed. Performs any necessary cleanup.
      */
     async onClose() {
-        // No specific resources to clean up at the moment.
+        // Clear any selected notes when the view is closed
+        this.selectedNotes = undefined;
     }
 
     /**
@@ -155,6 +157,9 @@ export class SynapseConsoleView extends ItemView {
         // Delegate the core thought processing logic to the main plugin.
         // This keeps the view focused on UI and input handling.
         this.plugin.processThought(prompt, activeFile, this.selectedNotes);
+        
+        // Clear the selected notes after processing
+        this.selectedNotes = undefined;
     }
     
     /**
