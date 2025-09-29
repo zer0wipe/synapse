@@ -10,9 +10,32 @@ It leverages the core strengths of Obsidian—notes as nodes, links as connectio
 
 * **Conversational AI in Your Vault:** Interact with powerful LLMs directly within Obsidian.
 * **Automatic Note Creation & Linking:** Every AI response generates a new, linked note, building your thought-tree automatically.
-* **Effortless Branching & Forking:** Explore different lines of thought simply by prompting from any previous note. The old paths remain intact.
-* **Context-Aware History:** Synapse automatically sends the current branch's history to the LLM, ensuring relevant and dynamic context while saving tokens and cost.
+* **Smart Context Building:**
+  - **Manual Branching:** Explicitly select which notes to include in the context by following links. Perfect for curating specific thought paths.
+  - **Automatic History:** Or let Synapse automatically build context by following the most recent backlinks.
+* **Context-Aware History:** Synapse sends the relevant context to the LLM, ensuring coherent and dynamic conversations while saving tokens.
 * **Native Graph View Integration:** Visualize your branching conversations in real-time using Obsidian's Graph View.
+
+### Using Branch Context
+
+The Branch feature lets you explicitly choose which notes to include in the conversation:
+
+1. **Start Branching:**
+   - Click the Branch button in the ribbon, or
+   - Use the "Branch Context" command, or
+   - Click Branch in the console view
+
+2. **Build Your Chain:**
+   - The modal shows your current note and its connections
+   - Click any linked note (inbound or outbound) to add it to the chain
+   - Keep selecting notes to build your desired context path
+   - The order of selection matters - it's the order the LLM will see
+
+3. **Finish & Connect:**
+   - Click "Stop here" when you've selected all desired notes
+   - The console opens with your chain ready
+   - Type your prompt and click Connect
+   - The LLM response includes your curated context
 
 #### Manual Installation (from source)
 

@@ -35,6 +35,22 @@ export class ContextBuilder {
     }
 
     /**
+     * Formats a series of notes into a context string.
+     * This is used both for manual branch context building and automatic backlink traversal.
+     * @param notes Array of notes to include in the context
+     * @returns A formatted string containing the content of the context chain
+     */
+    public async buildContextFromNotes(notes: TFile[]): Promise<string> {
+        let contextString = "";
+        for (const file of notes) {
+            const content = await this.app.vault.read(file);
+            const contentWithoutLinks = content.replace(/\[\[.*?\]\]/g, '');
+            contextString += `--- [Note: ${file.basename}] ---\n${contentWithoutLinks}\n\n`;
+        }
+        return contextString;
+    }
+
+    /**
      * Builds a conversational context string by traversing backlinks from a starting file.
      * The context includes the content of the `startFile` and its `maxDepth` number of parents.
      * @param startFile The Obsidian note from which to start building context.
@@ -62,18 +78,8 @@ export class ContextBuilder {
             depth++;
         }
 
-        // 2. Read and format the content of the notes in the context chain.
-        let contextString = "";
-        for (const file of contextChain) {
-            const content = await this.app.vault.read(file);
-            // Remove Obsidian wiki-links (e.g., [[Link Name]]) to avoid leaking link noise into the LLM context.
-            // A non-greedy regex is used to match content inside double brackets.
-            const contentWithoutLinks = content.replace(/\[\[.*?\]\]/g, '');
-            contextString += `--- [Note: ${file.basename}] ---
-${contentWithoutLinks}\n\n`;
-        }
-
-        return contextString;
+        // 2. Use the shared context building method to format the chain
+        return await this.buildContextFromNotes(contextChain);
     }
 
     /**

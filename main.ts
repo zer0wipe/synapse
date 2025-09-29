@@ -274,12 +274,7 @@ export default class SynapsePlugin extends Plugin {
      * Builds context from an explicitly selected chain of notes.
      */
     private async buildBranchedContext(notes: TFile[]): Promise<string> {
-        let contextString = "";
-        for (const note of notes) {
-            const content = await this.app.vault.read(note);
-            const contentWithoutLinks = content.replace(/\[\[.*?\]\]/g, '');
-            contextString += `--- [Note: ${note.basename}] ---\n${contentWithoutLinks}\n\n`;
-        }
-        return contextString;
+        // Simply delegate to contextBuilder's new buildContextFromNotes method
+        return await this.contextBuilder.buildContextFromNotes(notes);
     }
 }

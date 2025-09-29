@@ -1,6 +1,6 @@
 {
   "name": "synapse",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "An active environment to grow thoughts. Treats notes as an evolving, interactive conversation with an LLM, creating a branching knowledge graph.",
   "main": "main.js",
   "scripts": {
