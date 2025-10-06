@@ -1,43 +1,168 @@
 /**
  * styles.css
- * 
- * This file contains the custom CSS styles for the Synapse Obsidian plugin.
- * It defines the visual appearance and layout for the Synapse console view and modal components.
+ * Synapse Plugin Styles
  */
 
-/* --- Synapse Modal Container Styles --- */
-.synapse-modal-container {
+/* --- Common Modal Styles --- */
+.modal {
+    --modal-padding: 20px;
+    --border-radius: 4px;
+}
+
+/* Shared modal layouts */
+.synapse-modal-container,
+.branch-modal,
+.context-preview-modal {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    padding: var(--modal-padding);
+    max-width: 800px;
 }
 
-/* --- Synapse Modal Header Styles --- */
-.synapse-modal-header {
-    padding: 10px;
-    border-bottom: 1px solid var(--background-modifier-border); /* Separator line */
+.branch-modal {
+    max-width: 600px;
 }
 
-/* --- Synapse Modal Text Area Container Styles --- */
+/* Headers */
+.modal-header {
+    margin-bottom: 20px;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.4em;
+    color: var(--text-normal);
+}
+
+/* Content areas */
+.modal-content,
 .synapse-modal-text-container {
-    flex-grow: 1; /* Allows the text area to take up available vertical space */
-    padding: 10px;
+    flex-grow: 1;
     display: flex;
     flex-direction: column;
+    gap: 20px;
 }
 
-.synapse-modal-text-container textarea {
-    resize: none; /* Disable manual resizing as it's handled by JavaScript */
+/* Containers with background */
+.chain-container,
+.context-summary,
+.inbound-links,
+.outbound-links {
+    padding: 15px;
+    border-radius: var(--border-radius);
+    background: var(--background-secondary);
 }
 
-/* --- Synapse Modal Controls (Buttons) Styles --- */
-.synapse-modal-controls {
+/* Lists */
+.note-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
     display: flex;
-    justify-content: flex-end; /* Align buttons to the right */
-    padding: 10px;
-    border-top: 1px solid var(--background-modifier-border); /* Separator line */
+    flex-direction: column;
+    gap: 5px;
 }
 
-.synapse-modal-controls button {
-    margin-left: 10px; /* Space between buttons */
+/* Buttons and Interactive Elements */
+.interactive-button {
+    padding: 8px 16px;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    border: 1px solid var(--background-modifier-border);
+    background: var(--background-primary);
+    color: var(--text-normal);
+    transition: all 0.2s ease;
+}
+
+.interactive-button:hover {
+    background: var(--background-modifier-hover);
+    border-color: var(--text-accent);
+}
+
+.button-container {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+/* Note styles */
+.current-note {
+    padding: 10px;
+    border-radius: var(--border-radius);
+    background: var(--background-primary-alt);
+    border-left: 4px solid var(--text-accent);
+    margin-bottom: 20px;
+}
+
+.note-item {
+    padding: 5px 10px;
+    background: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: var(--border-radius);
+}
+
+/* Links section */
+.links-container {
+    display: flex;
+    gap: 20px;
+}
+
+.links-section {
+    flex: 1;
+}
+
+.links-section h4 {
+    margin: 0 0 10px;
+    color: var(--text-accent);
+}
+
+.no-links {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* Context preview specific */
+.context-preview {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.context-preview pre {
+    margin: 0;
+    padding: 15px;
+    background: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: var(--border-radius);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.context-preview code {
+    font-family: var(--font-monospace);
+    font-size: 0.9em;
+}
+
+/* Status indicators */
+.loading,
+.error {
+    padding: 10px;
+    border-radius: var(--border-radius);
+    text-align: center;
+}
+
+.loading {
+    color: var(--text-muted);
+}
+
+.error {
+    color: var(--text-error);
+    background: var(--background-modifier-error);
+}
+
+/* Icon styles */
+.icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
 }
