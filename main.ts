@@ -14,7 +14,35 @@ import { SynapseConsoleView, SYNAPSE_VIEW_TYPE } from './src/consoleView';
 import { BranchModal } from './src/branchModal';
 
 /**
- * The main class for the Synapse plugin. Extends Obsidian's Plugin class.
+ * Synapse: An AI-powered thought exploration plugin for Obsidian.
+ * 
+ * Synapse creates an active environment for growing thoughts within your knowledge graph.
+ * It treats notes as evolving conversations with an LLM, enabling organic exploration
+ * of ideas through branching context paths.
+ * 
+ * Core Features:
+ * - Thought Generation: Create AI-assisted notes from your knowledge context
+ * - Context Branching: Select multiple notes to inform new thoughts
+ * - Preview System: Verify context before generation
+ * - Flexible Integration: Works with various LLM providers
+ * 
+ * Architecture:
+ * - Services:
+ *   - LLMService: Handles AI interaction
+ *   - ContextBuilder: Manages context chain creation
+ *   - NoteManager: Handles note operations
+ * 
+ * - UI Components:
+ *   - Console View: Main interaction interface
+ *   - Branch Modal: Context selection
+ *   - Preview Modal: Context verification
+ * 
+ * Integration Points:
+ * - Ribbon icons for quick access
+ * - Commands for keyboard control
+ * - Settings for customization
+ * 
+ * @extends Plugin
  * Manages plugin settings, initializes core services, and defines the main logic
  * for processing user thoughts into new, linked notes.
  */

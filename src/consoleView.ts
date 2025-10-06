@@ -15,7 +15,43 @@ import { ContextPreviewModal } from './contextPreviewModal';
 /**
  * The unique identifier for the Synapse console view type.
  */
+/**
+ * The unique identifier for the Synapse console view.
+ * Used for view registration and retrieval in Obsidian's view system.
+ */
 export const SYNAPSE_VIEW_TYPE = "synapse-console-view";
+
+/**
+ * SynapseConsoleView implements the main interface for thought generation.
+ * This view serves as the primary interaction point for users, providing
+ * a clean, focused environment for developing thoughts with AI assistance.
+ * 
+ * Core Features:
+ * - Prompt input with auto-resize
+ * - Context preview functionality
+ * - Branching context selection
+ * - Direct thought generation
+ * 
+ * UI Components:
+ * - Text input area
+ * - Action buttons:
+ *   - Preview: Show context chain
+ *   - Branch: Select context notes
+ *   - Connect: Generate thought
+ *   - Nevermind: Cancel operation
+ * 
+ * State Management:
+ * - Tracks selected notes for branching
+ * - Maintains input state
+ * - Handles view lifecycle
+ * 
+ * @extends ItemView
+ * @example
+ * ```typescript
+ * const view = new SynapseConsoleView(leaf, plugin);
+ * await view.onOpen(); // Initialize view
+ * ```
+ */
 
 /**
  * Represents the Synapse console view, extending Obsidian's ItemView.

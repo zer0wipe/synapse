@@ -11,6 +11,29 @@ import { App, TFile } from 'obsidian';
  * Manages the process of building conversational context from Obsidian notes.
  * It identifies a chain of related notes (via backlinks) and concatenates their content.
  */
+/**
+ * ContextBuilder is responsible for constructing the context chain that informs the LLM.
+ * It traverses the note graph to build meaningful context for thought generation.
+ * 
+ * Key Responsibilities:
+ * - Builds context from a single note
+ * - Builds context from multiple selected notes
+ * - Manages context depth and relevance
+ * - Handles note content formatting
+ * 
+ * Context Chain Structure:
+ * 1. Primary note content
+ * 2. Selected branch notes (if any)
+ * 3. Relevant backlinks (up to configured depth)
+ * 
+ * @example
+ * ```typescript
+ * const builder = new ContextBuilder(app);
+ * const context = await builder.buildContext(activeFile);
+ * // or
+ * const branchedContext = await builder.buildContextFromNotes(selectedNotes);
+ * ```
+ */
 export class ContextBuilder {
     // The Obsidian App instance, providing access to vault and metadata.
     private app: App;
@@ -19,11 +42,24 @@ export class ContextBuilder {
 
     /**
      * Constructs a new ContextBuilder instance.
-     * @param app The Obsidian App instance.
+     * 
+     * Initializes the builder with access to Obsidian's App instance
+     * and sets default configuration values.
+     * 
+     * @param app The Obsidian App instance providing access to:
+     *            - Vault operations (reading files)
+     *            - Metadata cache (backlinks, frontmatter)
+     *            - File system operations
+     * 
+     * @example
+     * ```typescript
+     * const builder = new ContextBuilder(app);
+     * builder.updateSettings({ contextDepth: 3 });
+     * ```
      */
     constructor(app: App) {
         this.app = app;
-        this.maxDepth = 5; // Default value
+        this.maxDepth = 5; // Default context depth
     }
 
     /**

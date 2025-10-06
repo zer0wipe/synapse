@@ -6,6 +6,32 @@
  */
 import { App, Modal, TFile, setIcon } from 'obsidian';
 
+/**
+ * BranchModal implements the branching interface for thought context selection.
+ * This modal allows users to navigate their note graph and select multiple notes
+ * to include in their thought's context chain.
+ * 
+ * UI Components:
+ * - Chain Preview: Shows currently selected notes
+ * - Current Note: Displays active note
+ * - Link Navigation:
+ *   - Inbound Links: Notes linking to current note
+ *   - Outbound Links: Notes linked from current note
+ * 
+ * Interaction Flow:
+ * 1. Start from active note
+ * 2. Navigate through note connections
+ * 3. Select relevant notes for context
+ * 4. Confirm final chain
+ * 
+ * @extends Modal
+ * @example
+ * ```typescript
+ * new BranchModal(app, currentFile, (selectedNotes) => {
+ *   // Handle selected notes
+ * }).open();
+ * ```
+ */
 export class BranchModal extends Modal {
     private currentNote: TFile;
     private selectedNotes: TFile[] = [];

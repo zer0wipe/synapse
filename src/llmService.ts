@@ -12,6 +12,28 @@ import { SynapseSettings } from '../src/settings';
  * Manages communication with configured Large Language Models.
  * Currently supports the Ollama API.
  */
+/**
+ * LLMService handles all interactions with language model APIs.
+ * This service abstracts away the complexity of different LLM providers
+ * and provides a unified interface for the rest of the application.
+ * 
+ * Features:
+ * - Supports multiple API providers (currently Ollama)
+ * - Handles API configuration and requests
+ * - Processes responses and error handling
+ * - Manages API-specific formatting and requirements
+ * 
+ * @example
+ * ```typescript
+ * const llmService = new LLMService(settings);
+ * try {
+ *   const response = await llmService.generateResponse(prompt, context);
+ *   // Handle response
+ * } catch (error) {
+ *   // Handle error
+ * }
+ * ```
+ */
 export class LLMService {
     private settings: SynapseSettings;
 
@@ -33,9 +55,36 @@ export class LLMService {
 
     /**
      * Makes an asynchronous API call to the Ollama LLM.
-     * @param prompt The prompt to send to the Ollama API.
-     * @param model The specific Ollama model to call.
-     * @returns The parsed JSON response from the Ollama API.
+     * 
+     * This method handles the direct communication with Ollama's API endpoint.
+     * It constructs the appropriate request parameters, handles the API call,
+     * and processes the response.
+     * 
+     * Error Handling:
+     * - Validates endpoint configuration
+     * - Handles network errors
+     * - Processes API-specific errors
+     * - Provides user-friendly error messages
+     * 
+     * @param prompt The complete prompt to send to the Ollama API,
+     *              including system prompt and context.
+     * @param model The specific Ollama model to use (e.g., 'mistral', 'llama2').
+     * @returns The parsed JSON response from the Ollama API containing
+     *          the generated text.
+     * @throws {Error} If the API call fails or returns an invalid response.
+     * 
+     * @example
+     * ```typescript
+     * try {
+     *   const response = await this.callOllama(
+     *     'Analyze this context...', 
+     *     'mistral'
+     *   );
+     *   // Process response
+     * } catch (error) {
+     *   // Handle error
+     * }
+     * ```
      * @throws An error if the API endpoint is not set or if the API call fails.
      */
     private async callOllama(prompt: string, model: string): Promise<any> {

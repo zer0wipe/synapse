@@ -7,6 +7,34 @@
 import { App, Modal, TFile } from 'obsidian';
 import { ContextBuilder } from './contextBuilder';
 
+/**
+ * ContextPreviewModal provides a preview of the context that will be sent to the LLM.
+ * This modal helps users understand and verify the information that will inform
+ * their thought generation process.
+ * 
+ * Features:
+ * - Shows full context chain
+ * - Displays note count and summary
+ * - Provides readable preview of actual context
+ * - Offers guidance on modifying context
+ * 
+ * UI Sections:
+ * - Header with context summary
+ * - Scrollable context preview
+ * - Helper note for modification
+ * - Error handling display
+ * 
+ * @extends Modal
+ * @example
+ * ```typescript
+ * new ContextPreviewModal(
+ *   app,
+ *   contextBuilder,
+ *   activeFile,
+ *   selectedNotes
+ * ).open();
+ * ```
+ */
 export class ContextPreviewModal extends Modal {
     private contextBuilder: ContextBuilder;
     private activeFile: TFile;

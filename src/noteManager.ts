@@ -10,6 +10,28 @@ import { App, TFile, normalizePath, parseYaml, stringifyYaml } from 'obsidian';
 /**
  * Manages the creation and linking of Obsidian notes within the vault.
  */
+/**
+ * NoteManager handles all note-related operations in the vault.
+ * This service is responsible for creating, updating, and managing notes
+ * while maintaining Obsidian's expected file structure and metadata.
+ * 
+ * Core Functions:
+ * - Creates new notes with proper titles and paths
+ * - Handles note content formatting and metadata
+ * - Manages note relationships and backlinks
+ * - Ensures unique filenames and proper paths
+ * 
+ * File Naming Strategy:
+ * - Sanitizes titles for filesystem compatibility
+ * - Handles duplicate file names with timestamps
+ * - Maintains folder structure based on settings
+ * 
+ * @example
+ * ```typescript
+ * const manager = new NoteManager(app);
+ * await manager.createNote(title, content, folder, activeFile);
+ * ```
+ */
 export class NoteManager {
     // The Obsidian App instance, providing access to vault operations.
     private app: App;
@@ -24,8 +46,25 @@ export class NoteManager {
 
     /**
      * Sanitizes a given title string to be safe for use as an Obsidian filename.
-     * Removes characters that are not allowed in file paths (e.g., '/', ':').
-     * @param title The raw title string.
+     * 
+     * This method processes raw titles to ensure they are compatible with:
+     * - File system requirements
+     * - Obsidian's naming conventions
+     * - Cross-platform compatibility
+     * 
+     * Processing Steps:
+     * 1. Remove illegal characters ('/', ':')
+     * 2. Replace problematic characters with safe alternatives
+     * 3. Trim whitespace and normalize separators
+     * 
+     * @param title The raw title string to be sanitized
+     * @returns A sanitized string safe for use as a filename
+     * 
+     * @example
+     * ```typescript
+     * const safeTitle = manager.sanitizeTitle('My: Special/Note');
+     * // Returns: 'My Special Note'
+     * ```
      * @returns The sanitized title string.
      */
     private sanitizeTitle(title: string): string {
