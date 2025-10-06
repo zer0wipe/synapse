@@ -5,9 +5,6 @@
  * It defines the visual appearance and layout for the Synapse console view and modal components.
  */
 
-/* Import the context preview modal styles */
-@import url('./contextPreviewModal.css');
-
 /* Branch Modal styles */
 .branch-modal {
     max-width: 600px;
