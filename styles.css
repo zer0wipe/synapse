@@ -79,6 +79,33 @@
     border-color: var(--text-accent);
 }
 
+/* Console view controls */
+.synapse-modal-controls {
+    display: flex;
+    justify-content: flex-end;
+    padding: 10px;
+    border-top: 1px solid var(--background-modifier-border);
+}
+
+.synapse-modal-controls button {
+    margin-left: 10px;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.synapse-modal-controls button[type='submit'],
+.synapse-modal-controls button.mod-cta {
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+}
+
+.synapse-modal-controls button:hover {
+    opacity: 0.9;
+}
+
+/* Other button containers */
 .button-container {
     display: flex;
     justify-content: flex-end;
