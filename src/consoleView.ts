@@ -10,6 +10,7 @@ import SynapsePlugin from '../main';
 import { LLMService } from './llmService';
 import { ContextBuilder } from './contextBuilder';
 import { NoteManager } from './noteManager';
+import { ContextPreviewModal } from './contextPreviewModal';
 
 /**
  * The unique identifier for the Synapse console view type.
@@ -94,6 +95,25 @@ export class SynapseConsoleView extends ItemView {
                 this.clearPrompt();
                 this.selectedNotes = undefined; // Clear selected notes
                 this.leaf.detach(); // Close the view
+            });
+
+        // "Preview Context" button to show the context preview modal
+        const previewButton = new ButtonComponent(controls);
+        previewButton
+            .setButtonText("Preview Context")
+            .setIcon("eye")
+            .onClick(() => {
+                const activeFile = this.app.workspace.getActiveFile();
+                if (!activeFile) {
+                    new Notice("No active file to preview context from.");
+                    return;
+                }
+                new ContextPreviewModal(
+                    this.app,
+                    this.contextBuilder,
+                    activeFile,
+                    this.selectedNotes
+                ).open();
             });
 
         // "Branch" button to start the branching workflow
