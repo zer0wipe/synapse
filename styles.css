@@ -63,6 +63,56 @@
     gap: 5px;
 }
 
+.synapse-plugin .chain-container .no-notes {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.synapse-plugin .chain-container li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px;
+    margin: 5px 0;
+    background: var(--background-secondary);
+    border-radius: var(--synapse-border-radius);
+}
+
+.synapse-plugin .chain-container .remove-note {
+    padding: 2px;
+    margin-left: 8px;
+    color: var(--text-muted);
+}
+
+.synapse-plugin .chain-container .remove-note:hover {
+    color: var(--text-error);
+}
+
+.synapse-plugin .current-note-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.synapse-plugin .current-note-header .add-to-context {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 8px;
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+    border-radius: var(--synapse-border-radius);
+}
+
+.synapse-plugin .current-note-header .in-context {
+    padding: 4px 8px;
+    background: var(--background-modifier-success);
+    color: var(--text-success);
+    border-radius: var(--synapse-border-radius);
+    font-size: 0.9em;
+}
+
 /* Buttons and Interactive Elements */
 .synapse-plugin .synapse-button {
     padding: 8px 16px;

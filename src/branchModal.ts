@@ -40,7 +40,7 @@ export class BranchModal extends Modal {
     constructor(app: App, startNote: TFile, onComplete: (notes: TFile[]) => void) {
         super(app);
         this.currentNote = startNote;
-        this.selectedNotes = [startNote]; // Start with the current note
+        this.selectedNotes = []; // Don't automatically add the start note
         this.onComplete = onComplete;
     }
 
@@ -60,16 +60,50 @@ export class BranchModal extends Modal {
 
         // Current chain
         const chainEl = contentEl.createDiv('chain-container');
-        chainEl.createEl('h3', { text: 'Selected Chain:' });
+        chainEl.createEl('h3', { text: 'Context Chain:' });
         const chainList = chainEl.createEl('ul');
-        this.selectedNotes.forEach(note => {
+        if (this.selectedNotes.length === 0) {
             const li = chainList.createEl('li');
-            li.setText(note.basename);
-        });
+            li.setText('No notes added to context yet');
+            li.addClass('no-notes');
+        } else {
+            this.selectedNotes.forEach((note, index) => {
+                const li = chainList.createEl('li');
+                const noteText = li.createSpan();
+                noteText.setText(note.basename);
+                
+                // Add remove button
+                const removeBtn = li.createEl('button');
+                removeBtn.addClass('remove-note');
+                setIcon(removeBtn, 'x');
+                removeBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    this.selectedNotes.splice(index, 1);
+                    this.updateModalContent();
+                };
+            });
+        }
 
         // Current note info
         const currentNoteEl = contentEl.createDiv('current-note');
-        currentNoteEl.createEl('h3', { text: `Current Note: ${this.currentNote.basename}` });
+        const currentNoteHeader = currentNoteEl.createDiv('current-note-header');
+        currentNoteHeader.createEl('h3', { text: `Current Note: ${this.currentNote.basename}` });
+        
+        // Add to context button
+        if (!this.selectedNotes.some(note => note.path === this.currentNote.path)) {
+            const addBtn = currentNoteHeader.createEl('button', {
+                text: 'Add to Context'
+            });
+            addBtn.addClass('add-to-context');
+            setIcon(addBtn, 'plus');
+            addBtn.onclick = () => {
+                this.addToContext(this.currentNote);
+            };
+        } else {
+            const inContextSpan = currentNoteHeader.createEl('span');
+            inContextSpan.setText('In context');
+            inContextSpan.addClass('in-context');
+        }
 
         // Links container
         const linksEl = contentEl.createDiv('links-container');
@@ -149,12 +183,23 @@ export class BranchModal extends Modal {
     }
 
     private selectNote(note: TFile) {
-        this.selectedNotes.push(note);
+        // Just navigate to the note without adding it to context
         this.currentNote = note;
         this.updateModalContent();
     }
 
+    private addToContext(note: TFile) {
+        if (!this.selectedNotes.some(n => n.path === note.path)) {
+            this.selectedNotes.push(note);
+            this.updateModalContent();
+        }
+    }
+
     private finish() {
+        // If no notes are selected, add the current note
+        if (this.selectedNotes.length === 0) {
+            this.selectedNotes.push(this.currentNote);
+        }
         this.onComplete(this.selectedNotes);
         this.close();
     }
