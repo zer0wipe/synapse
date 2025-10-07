@@ -39,12 +39,20 @@ export class ContextPreviewModal extends Modal {
     private contextBuilder: ContextBuilder;
     private activeFile: TFile;
     private selectedNotes?: TFile[];
+    private onClear?: () => void;
 
-    constructor(app: App, contextBuilder: ContextBuilder, activeFile: TFile, selectedNotes?: TFile[]) {
+    constructor(
+        app: App, 
+        contextBuilder: ContextBuilder, 
+        activeFile: TFile, 
+        selectedNotes?: TFile[],
+        onClear?: () => void
+    ) {
         super(app);
         this.contextBuilder = contextBuilder;
         this.activeFile = activeFile;
         this.selectedNotes = selectedNotes;
+        this.onClear = onClear;
     }
 
     async onOpen() {
@@ -74,10 +82,25 @@ export class ContextPreviewModal extends Modal {
 
             // Show context summary
             const summaryEl = contentEl.createDiv('context-summary');
+            const summaryHeader = summaryEl.createDiv('summary-header');
+            
             const noteCount = this.selectedNotes?.length || 1; // At least 1 for active file
-            summaryEl.createEl('p', { 
+            const summaryText = summaryHeader.createEl('p', { 
                 text: `Context chain includes ${noteCount} note${noteCount > 1 ? 's' : ''}.` 
             });
+
+            // Add clear button if we have selectedNotes and onClear callback
+            if (this.selectedNotes && this.selectedNotes.length > 0 && this.onClear) {
+                const clearBtn = summaryHeader.createEl('button');
+                clearBtn.addClass('clear-context');
+                clearBtn.setText('Clear Context');
+                clearBtn.onclick = () => {
+                    if (this.onClear) {
+                        this.onClear();
+                        this.close();
+                    }
+                };
+            }
 
             // Show the actual context
             const previewEl = contentEl.createDiv('context-preview');

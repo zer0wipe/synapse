@@ -156,7 +156,11 @@ export class SynapseConsoleView extends ItemView {
                     this.app,
                     this.contextBuilder,
                     activeFile,
-                    this.selectedNotes
+                    this.selectedNotes,
+                    () => {
+                        this.selectedNotes = [];
+                        new Notice("Context chain cleared");
+                    }
                 ).open();
             });
 

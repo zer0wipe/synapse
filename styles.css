@@ -43,6 +43,31 @@
     gap: 20px;
 }
 
+/* Summary Header */
+.synapse-plugin .summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.synapse-plugin .summary-header p {
+    margin: 0;
+}
+
+.synapse-plugin .clear-context {
+    background: var(--background-modifier-error);
+    color: var(--text-on-accent);
+    padding: 4px 8px;
+    border-radius: var(--synapse-border-radius);
+    font-size: 0.9em;
+    transition: opacity 0.2s ease;
+}
+
+.synapse-plugin .clear-context:hover {
+    opacity: 0.9;
+}
+
 /* Containers with background */
 .synapse-plugin .chain-container,
 .synapse-plugin .context-summary,
