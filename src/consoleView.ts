@@ -111,8 +111,10 @@ export class SynapseConsoleView extends ItemView {
         contentEl.addClass("synapse-console"); // Add console view class
 
         // Create a container for the prompt input area.
-        const textContainer = contentEl.createEl("div", { cls: "synapse-console-content" });
-        this.promptInput = textContainer.createEl("textarea");
+        const container = contentEl.createEl("div", { cls: "synapse-console-content" });
+        
+        // Add textarea
+        this.promptInput = container.createEl("textarea");
         this.promptInput.rows = 5;
         this.promptInput.placeholder = "Enter your thought here...";
         // Auto-resize the textarea based on content.
@@ -121,13 +123,17 @@ export class SynapseConsoleView extends ItemView {
             this.promptInput.style.height = this.promptInput.scrollHeight + 'px';
         });
 
-        // Create a container for control buttons.
-        const controls = contentEl.createEl("div", { cls: "synapse-console-controls" });
+        // Create a container for control buttons directly after textarea
+        const controls = container.createEl("div", { cls: "synapse-console-controls" });
+        
+        // Add spacer to push any remaining space to the bottom
+        container.createEl("div", { cls: "synapse-console-spacer" });
         
         // "Nevermind" button to clear the prompt and close the view.
         const nevermindButton = new ButtonComponent(controls);
         nevermindButton
             .setButtonText("Nevermind")
+            .setClass("synapse-button")
             .onClick(() => {
                 this.clearPrompt();
                 this.selectedNotes = undefined; // Clear selected notes
@@ -138,6 +144,7 @@ export class SynapseConsoleView extends ItemView {
         const previewButton = new ButtonComponent(controls);
         previewButton
             .setButtonText("Preview Context")
+            .setClass("synapse-button")
             .setIcon("eye")
             .onClick(() => {
                 const activeFile = this.app.workspace.getActiveFile();
@@ -157,6 +164,7 @@ export class SynapseConsoleView extends ItemView {
         const branchButton = new ButtonComponent(controls);
         branchButton
             .setButtonText("Branch")
+            .setClass("synapse-button")
             .setIcon("git-branch")
             .onClick(() => {
                 const activeFile = this.app.workspace.getActiveFile();
@@ -171,6 +179,7 @@ export class SynapseConsoleView extends ItemView {
         const connectButton = new ButtonComponent(controls);
         connectButton
             .setButtonText("Connect")
+            .setClass("synapse-button")
             .setCta() // Apply a call-to-action style
             .onClick(() => {
                 this.processPrompt();

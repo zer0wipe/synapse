@@ -5,7 +5,7 @@
 
 /* --- Common Modal Styles --- */
 .synapse-plugin {
-    --synapse-modal-padding: 20px;
+    --synapse-modal-padding: 0px;
     --synapse-border-radius: 4px;
 }
 
@@ -77,6 +77,38 @@
 .synapse-plugin .synapse-button:hover {
     background: var(--background-modifier-hover);
     border-color: var(--text-accent);
+}
+
+/* Console view layout */
+.synapse-plugin.synapse-console {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+}
+
+.synapse-plugin .synapse-console-content {
+    padding: var(--synapse-modal-padding);
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.synapse-plugin .synapse-console-content textarea {
+    width: 100%;
+    min-height: 150px;
+    resize: vertical;
+    padding: 10px;
+    border-radius: var(--synapse-border-radius);
+    border: 1px solid var(--background-modifier-border);
+    background: var(--background-primary);
+    color: var(--text-normal);
+}
+
+/* Space filler to push content to the top */
+.synapse-plugin .synapse-console-spacer {
+    flex-grow: 1;
 }
 
 /* Console view controls */
