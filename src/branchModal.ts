@@ -46,6 +46,7 @@ export class BranchModal extends Modal {
 
     async onOpen() {
         const { contentEl } = this;
+        contentEl.addClass('synapse-plugin');
         await this.updateModalContent();
     }
 

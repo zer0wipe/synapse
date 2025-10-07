@@ -4,39 +4,39 @@
  */
 
 /* --- Common Modal Styles --- */
-.modal {
-    --modal-padding: 20px;
-    --border-radius: 4px;
+.synapse-plugin {
+    --synapse-modal-padding: 20px;
+    --synapse-border-radius: 4px;
 }
 
 /* Shared modal layouts */
-.synapse-modal-container,
-.branch-modal,
-.context-preview-modal {
+.synapse-plugin .synapse-modal,
+.synapse-plugin .branch-modal,
+.synapse-plugin .context-preview-modal {
     display: flex;
     flex-direction: column;
-    padding: var(--modal-padding);
+    padding: var(--synapse-modal-padding);
     max-width: 800px;
 }
 
-.branch-modal {
+.synapse-plugin .branch-modal {
     max-width: 600px;
 }
 
 /* Headers */
-.modal-header {
+.synapse-plugin .synapse-modal-header {
     margin-bottom: 20px;
 }
 
-.modal-header h2 {
+.synapse-plugin .synapse-modal-header h2 {
     margin: 0;
     font-size: 1.4em;
     color: var(--text-normal);
 }
 
 /* Content areas */
-.modal-content,
-.synapse-modal-text-container {
+.synapse-plugin .synapse-modal-content,
+.synapse-plugin .synapse-modal-text-container {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
@@ -44,17 +44,17 @@
 }
 
 /* Containers with background */
-.chain-container,
-.context-summary,
-.inbound-links,
-.outbound-links {
+.synapse-plugin .chain-container,
+.synapse-plugin .context-summary,
+.synapse-plugin .inbound-links,
+.synapse-plugin .outbound-links {
     padding: 15px;
-    border-radius: var(--border-radius);
+    border-radius: var(--synapse-border-radius);
     background: var(--background-secondary);
 }
 
 /* Lists */
-.note-list {
+.synapse-plugin .note-list {
     list-style: none;
     padding: 0;
     margin: 0;
@@ -64,9 +64,9 @@
 }
 
 /* Buttons and Interactive Elements */
-.interactive-button {
+.synapse-plugin .synapse-button {
     padding: 8px 16px;
-    border-radius: var(--border-radius);
+    border-radius: var(--synapse-border-radius);
     cursor: pointer;
     border: 1px solid var(--background-modifier-border);
     background: var(--background-primary);
@@ -74,25 +74,31 @@
     transition: all 0.2s ease;
 }
 
-.interactive-button:hover {
+.synapse-plugin .synapse-button:hover {
     background: var(--background-modifier-hover);
     border-color: var(--text-accent);
 }
 
 /* Console view controls */
-.synapse-modal-controls {
+.synapse-plugin .synapse-console-controls {
     display: flex;
     justify-content: flex-end;
     padding: 10px;
     border-top: 1px solid var(--background-modifier-border);
 }
 
-.synapse-modal-controls button {
+.synapse-plugin .synapse-console-controls button {
     margin-left: 10px;
     padding: 8px 16px;
-    border-radius: 4px;
+    border-radius: var(--synapse-border-radius);
     cursor: pointer;
     font-size: 14px;
+}
+
+.synapse-plugin .synapse-console-controls button[type='submit'],
+.synapse-plugin .synapse-console-controls button.mod-cta {
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
 }
 
 .synapse-modal-controls button[type='submit'],

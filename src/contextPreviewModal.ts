@@ -48,6 +48,8 @@ export class ContextPreviewModal extends Modal {
     }
 
     async onOpen() {
+        this.contentEl.addClass('synapse-plugin');
+        this.modalEl.addClass('synapse-modal context-preview-modal');
         const { contentEl } = this;
         contentEl.empty();
         contentEl.addClass('context-preview-modal');

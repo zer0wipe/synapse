@@ -107,10 +107,11 @@ export class SynapseConsoleView extends ItemView {
     async onOpen() {
         const { contentEl } = this;
         contentEl.empty(); // Clear any existing content
-        contentEl.addClass("synapse-console-view"); // Add a class for styling
+        contentEl.addClass("synapse-plugin"); // Add main plugin class for scoping
+        contentEl.addClass("synapse-console"); // Add console view class
 
         // Create a container for the prompt input area.
-        const textContainer = contentEl.createEl("div", { cls: "synapse-modal-text-container" });
+        const textContainer = contentEl.createEl("div", { cls: "synapse-console-content" });
         this.promptInput = textContainer.createEl("textarea");
         this.promptInput.rows = 5;
         this.promptInput.placeholder = "Enter your thought here...";
@@ -121,7 +122,7 @@ export class SynapseConsoleView extends ItemView {
         });
 
         // Create a container for control buttons.
-        const controls = contentEl.createEl("div", { cls: "synapse-modal-controls" });
+        const controls = contentEl.createEl("div", { cls: "synapse-console-controls" });
         
         // "Nevermind" button to clear the prompt and close the view.
         const nevermindButton = new ButtonComponent(controls);
