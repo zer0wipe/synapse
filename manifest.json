@@ -1,11 +1,11 @@
 {
-	"id": "synapse-thought-connector",
-	"name": "Synapse",
-	"version": "1.1.0",
-	"minAppVersion": "1.5.0",
-	"description": "An active environment to grow thoughts. Treats notes as an evolving, interactive conversation with an LLM, creating a branching knowledge graph.",
-	"author": "zer0wipe",
-	"authorUrl": "https://github.com/zer0wipe",
-	"isDesktopOnly": false,
-	"main": "main.js"
+  "id": "synapse-thought-connector",
+  "name": "Synapse",
+  "version": "2.0.0",
+  "minAppVersion": "1.5.0",
+  "description": "An active environment to grow thoughts. Treats notes as an evolving, interactive conversation with an LLM, creating a branching knowledge graph.",
+  "author": "zer0wipe",
+  "authorUrl": "https://github.com/zer0wipe",
+  "isDesktopOnly": false,
+  "main": "main.js"
 }
