@@ -5,7 +5,7 @@
  * including loading settings, initializing services, registering UI components, and handling the core
  * thought processing workflow.
  */
-import { Plugin, Notice, TFile, Editor } from 'obsidian';
+import { Plugin, Notice, TFile, Editor, WorkspaceLeaf } from 'obsidian';
 import { SynapseSettings, DEFAULT_SETTINGS, SynapseSettingTab } from './src/settings';
 import { LLMService } from './src/llmService';
 import { NoteManager } from './src/noteManager';
@@ -58,6 +58,10 @@ export default class SynapsePlugin extends Plugin {
     contextBuilder!: ContextBuilder;
     // Store for managing the active branch chain
     branchStore!: BranchStore;
+    // Tracks pending navigation triggered by internal links
+    private pendingLinkTargetPath: string | null = null;
+    // Remembers previously active file to infer link-based navigation
+    private lastActiveFilePath: string | null = null;
 
 	/**
 	 * Called when the plugin is loaded. Performs all necessary setup.
@@ -87,16 +91,16 @@ export default class SynapsePlugin extends Plugin {
         );
 
         // Add a ribbon icon for the console
-        this.addRibbonIcon('brain-circuit', 'Open Synapse Console', () => {
-            this.activateView();
+        this.addRibbonIcon('git-branch', 'Open Synapse Branch', () => {
+            void this.showBranchView();
         });
 
 		// Register the console command
 		this.addCommand({
 			id: 'open-synapse-console',
-			name: 'Open Console',
+			name: 'Show Branch',
             callback: () => {
-                this.activateView();
+                void this.showBranchView();
             }
 		});
 
@@ -151,6 +155,30 @@ export default class SynapsePlugin extends Plugin {
                 this.generateLinkedNoteResponse(editor, file);
             }
         });
+
+        const initialFile = this.app.workspace.getActiveFile();
+        this.lastActiveFilePath = initialFile?.path ?? null;
+        this.registerEvent(
+            this.app.workspace.on('file-open', async (file) => {
+                if (!file) {
+                    return;
+                }
+
+                if (this.pendingLinkTargetPath && file.path === this.pendingLinkTargetPath) {
+                    this.branchStore.add(file);
+                    await this.showBranchView();
+                    this.pendingLinkTargetPath = null;
+                } else if (this.lastActiveFilePath) {
+                    const linksFromPrevious = this.app.metadataCache.resolvedLinks[this.lastActiveFilePath] ?? {};
+                    if (linksFromPrevious[file.path]) {
+                        this.branchStore.add(file);
+                        await this.showBranchView();
+                    }
+                }
+
+                this.lastActiveFilePath = file.path;
+            })
+        );
 
         this.registerDomEvent(document, 'click', (event) => {
             this.handleInternalLinkClick(event);
@@ -231,28 +259,6 @@ export default class SynapsePlugin extends Plugin {
 	}
 
     /**
-     * Activates (opens or reveals) the Synapse console view in the Obsidian workspace.
-     * It ensures only one instance of the view is open at a time.
-     */
-    async activateView() {
-        // Detach any existing leaves of the Synapse view type to ensure a fresh view.
-        this.app.workspace.detachLeavesOfType(SYNAPSE_VIEW_TYPE);
-
-        // Get or create a new leaf in the right sidebar for the console view.
-        const leaf = this.app.workspace.getRightLeaf(true);
-        if (leaf) {
-            // Set the view state to open the Synapse console.
-            await leaf.setViewState({
-                type: SYNAPSE_VIEW_TYPE,
-                active: true,
-            });
-    
-            // Reveal the leaf to make it visible to the user.
-            this.app.workspace.revealLeaf(leaf);
-        }
-    }
-
-    /**
      * The main thought processing workflow, now supporting both automatic backlink traversal
      * and explicit note selection via branching.
      */
@@ -312,17 +318,22 @@ export default class SynapsePlugin extends Plugin {
     }
 
     private async showBranchView() {
-        let leaf = this.app.workspace.getLeavesOfType(SYNAPSE_BRANCH_VIEW_TYPE)[0];
+        let leaf: WorkspaceLeaf | null = this.app.workspace.getLeavesOfType(SYNAPSE_BRANCH_VIEW_TYPE)[0] ?? null;
 
         if (!leaf) {
-            leaf = this.app.workspace.getRightLeaf(false) ?? this.app.workspace.getRightLeaf(true);
-            if (!leaf) {
+            const rightLeaf = this.app.workspace.getRightLeaf(false) ?? this.app.workspace.getRightLeaf(true);
+            if (!rightLeaf) {
                 return;
             }
+            leaf = rightLeaf;
             await leaf.setViewState({
                 type: SYNAPSE_BRANCH_VIEW_TYPE,
                 active: true,
             });
+        }
+
+        if (!leaf) {
+            return;
         }
 
         this.app.workspace.revealLeaf(leaf);
@@ -440,6 +451,7 @@ export default class SynapsePlugin extends Plugin {
 
         const destination = this.app.metadataCache.getFirstLinkpathDest(linkTarget, activeFile.path);
         if (destination instanceof TFile) {
+            this.pendingLinkTargetPath = destination.path;
             this.branchStore.add(destination);
         }
     }

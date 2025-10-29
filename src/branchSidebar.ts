@@ -27,6 +27,10 @@ export class BranchSidebarView extends ItemView {
         return 'Synapse Branch';
     }
 
+    getIcon(): string {
+        return 'git-branch';
+    }
+
     async onOpen() {
         const { contentEl } = this;
         contentEl.empty();
