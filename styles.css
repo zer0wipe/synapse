@@ -3,398 +3,208 @@
  * Synapse Plugin Styles
  */
 
-/* --- Common Modal Styles --- */
 .synapse-plugin {
-    --synapse-modal-padding: 0px;
-    --synapse-border-radius: 4px;
+  --synapse-border-radius: 4px;
 }
 
-/* Shared modal layouts */
-.synapse-plugin .synapse-modal,
-.synapse-plugin .branch-modal,
-.synapse-plugin .context-preview-modal {
-    display: flex;
-    flex-direction: column;
-    padding: var(--synapse-modal-padding);
-    max-width: 800px;
-}
-
-.synapse-plugin .branch-modal {
-    max-width: 600px;
-}
-
-/* Headers */
-.synapse-plugin .synapse-modal-header {
-    margin-bottom: 20px;
-}
-
-.synapse-plugin .synapse-modal-header h2 {
-    margin: 0;
-    font-size: 1.4em;
-    color: var(--text-normal);
-}
-
-/* Content areas */
-.synapse-plugin .synapse-modal-content,
-.synapse-plugin .synapse-modal-text-container {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-/* Summary Header */
-.synapse-plugin .summary-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-.synapse-plugin .summary-header p {
-    margin: 0;
-}
-
-.synapse-plugin .clear-context {
-    background: var(--background-modifier-error);
-    color: var(--text-on-accent);
-    padding: 4px 8px;
-    border-radius: var(--synapse-border-radius);
-    font-size: 0.9em;
-    transition: opacity 0.2s ease;
-}
-
-.synapse-plugin .clear-context:hover {
-    opacity: 0.9;
-}
-
-/* Containers with background */
-.synapse-plugin .chain-container,
-.synapse-plugin .context-summary,
-.synapse-plugin .inbound-links,
-.synapse-plugin .outbound-links {
-    padding: 15px;
-    border-radius: var(--synapse-border-radius);
-    background: var(--background-secondary);
-}
-
-/* Lists */
-.synapse-plugin .note-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.synapse-plugin .chain-container .no-notes {
-    color: var(--text-muted);
-    font-style: italic;
-}
-
-.synapse-plugin .chain-container li {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 5px;
-    margin: 5px 0;
-    background: var(--background-secondary);
-    border-radius: var(--synapse-border-radius);
-}
-
-.synapse-plugin .chain-container .remove-note {
-    padding: 2px;
-    margin-left: 8px;
-    color: var(--text-muted);
-}
-
-.synapse-plugin .chain-container .remove-note:hover {
-    color: var(--text-error);
-}
-
-.synapse-plugin .current-note-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-.synapse-plugin .current-note-header .add-to-context {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    padding: 4px 8px;
-    background: var(--interactive-accent);
-    color: var(--text-on-accent);
-    border-radius: var(--synapse-border-radius);
-}
-
-.synapse-plugin .current-note-header .in-context {
-    padding: 4px 8px;
-    background: var(--background-modifier-success);
-    color: var(--text-success);
-    border-radius: var(--synapse-border-radius);
-    font-size: 0.9em;
-}
-
-/* Buttons and Interactive Elements */
 .synapse-plugin .synapse-button {
-    padding: 8px 16px;
-    border-radius: var(--synapse-border-radius);
-    cursor: pointer;
-    border: 1px solid var(--background-modifier-border);
-    background: var(--background-primary);
-    color: var(--text-normal);
-    transition: all 0.2s ease;
+  padding: 0.5rem 1rem;
+  border-radius: var(--synapse-border-radius);
+  cursor: pointer;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-primary);
+  color: var(--text-normal);
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .synapse-plugin .synapse-button:hover {
-    background: var(--background-modifier-hover);
-    border-color: var(--text-accent);
+  background: var(--background-modifier-hover);
+  border-color: var(--text-accent);
 }
 
-/* Console view layout */
-.synapse-plugin.synapse-console {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    height: 100%;
+.synapse-plugin .synapse-button.mod-cta {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border-color: var(--interactive-accent);
 }
 
-.synapse-plugin .synapse-console-content {
-    padding: var(--synapse-modal-padding);
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+.synapse-plugin .synapse-button.mod-cta:hover {
+  opacity: 0.9;
 }
 
-.synapse-plugin .synapse-console-content textarea {
-    width: 100%;
-    min-height: 150px;
-    resize: vertical;
-    padding: 10px;
-    border-radius: var(--synapse-border-radius);
-    border: 1px solid var(--background-modifier-border);
-    background: var(--background-primary);
-    color: var(--text-normal);
+/* Context preview modal */
+.synapse-modal.context-preview-modal {
+  display: flex;
+  flex-direction: column;
+  max-width: 800px;
 }
 
-/* Space filler to push content to the top */
-.synapse-plugin .synapse-console-spacer {
-    flex-grow: 1;
+.context-preview-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
 }
 
-/* Console view controls */
-.synapse-plugin .synapse-console-controls {
-    display: flex;
-    justify-content: flex-end;
-    padding: 10px;
-    border-top: 1px solid var(--background-modifier-border);
+.context-preview-modal .modal-header h2 {
+  margin: 0;
 }
 
-.synapse-plugin .synapse-console-controls button {
-    margin-left: 10px;
-    padding: 8px 16px;
-    border-radius: var(--synapse-border-radius);
-    cursor: pointer;
-    font-size: 14px;
+.context-preview-modal .summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
 }
 
-.synapse-plugin .synapse-console-controls button[type='submit'],
-.synapse-plugin .synapse-console-controls button.mod-cta {
-    background: var(--interactive-accent);
-    color: var(--text-on-accent);
+.context-preview-modal .summary-header p {
+  margin: 0;
 }
 
-.synapse-modal-controls button[type='submit'],
-.synapse-modal-controls button.mod-cta {
-    background: var(--interactive-accent);
-    color: var(--text-on-accent);
+.context-preview-modal .clear-context {
+  background: var(--background-modifier-error);
+  color: var(--text-on-accent);
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--synapse-border-radius);
+  border: none;
+  cursor: pointer;
 }
 
-.synapse-modal-controls button:hover {
-    opacity: 0.9;
+.context-preview-modal .clear-context:hover {
+  opacity: 0.9;
 }
 
-/* Other button containers */
-.button-container {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 20px;
+.context-preview-modal .context-preview {
+  max-height: 400px;
+  overflow-y: auto;
 }
 
-/* Note styles */
-.synapse-plugin .current-note {
-    padding: 10px;
-    border-radius: var(--synapse-border-radius);
-    background: var(--background-primary-alt);
-    border-left: 4px solid var(--text-accent);
-    margin-bottom: 20px;
+.context-preview-modal .context-preview pre {
+  margin: 0;
+  padding: 1rem;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--synapse-border-radius);
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
-.synapse-plugin .note-item {
-    padding: 5px 10px;
-    background: var(--background-primary);
-    border: 1px solid var(--background-modifier-border);
-    border-radius: var(--synapse-border-radius);
+.context-preview-modal .context-note {
+  font-size: 0.9rem;
+  color: var(--text-muted);
 }
 
-/* Links section */
-.links-container {
-    display: flex;
-    gap: 20px;
+.context-preview-modal .loading,
+.context-preview-modal .error {
+  padding: 0.75rem;
+  border-radius: var(--synapse-border-radius);
+  text-align: center;
 }
 
-.links-section {
-    flex: 1;
+.context-preview-modal .loading {
+  color: var(--text-muted);
 }
 
-.links-section h4 {
-    margin: 0 0 10px;
-    color: var(--text-accent);
+.context-preview-modal .error {
+  color: var(--text-error);
+  background: var(--background-modifier-error);
 }
 
-.no-links {
-    color: var(--text-muted);
-    font-style: italic;
-}
-
-/* Context preview specific */
-.synapse-plugin .context-preview {
-    max-height: 400px;
-    overflow-y: auto;
-}
-
-.synapse-plugin .context-preview pre {
-    margin: 0;
-    padding: 15px;
-    background: var(--background-primary);
-    border: 1px solid var(--background-modifier-border);
-    border-radius: var(--synapse-border-radius);
-    white-space: pre-wrap;
-    word-break: break-word;
-}
-
-.synapse-plugin .context-preview code {
-    font-family: var(--font-monospace);
-    font-size: 0.9em;
-}
-
-/* Status indicators */
-.synapse-plugin .loading,
-.synapse-plugin .error {
-    padding: 10px;
-    border-radius: var(--synapse-border-radius);
-    text-align: center;
-}
-
-.synapse-plugin .loading {
-    color: var(--text-muted);
-}
-
-.synapse-plugin .error {
-    color: var(--text-error);
-    background: var(--background-modifier-error);
-}
-
-/* Icon styles */
-.synapse-plugin .icon {
-    width: 16px;
-    height: 16px;
-    margin-right: 4px;
+.context-preview-modal .modal-footer {
+  display: flex;
+  justify-content: flex-end;
 }
 
 /* Branch sidebar */
 .synapse-branch-sidebar {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .synapse-branch-sidebar__content {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    padding: 1rem;
-    height: 100%;
-    box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 .synapse-branch-sidebar__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .synapse-branch-sidebar__header h3 {
-    margin: 0;
-    font-size: 1rem;
+  margin: 0;
+  font-size: 1rem;
 }
 
 .synapse-branch-sidebar__clear {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    background: transparent;
-    border: none;
-    color: var(--text-muted);
-    cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
 }
 
 .synapse-branch-sidebar__list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .synapse-branch-sidebar__item {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    gap: 0.5rem;
-    align-items: center;
-    padding: 0.5rem;
-    border-radius: 6px;
-    background: var(--background-secondary);
-    cursor: grab;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.5rem;
+  border-radius: 6px;
+  background: var(--background-secondary);
+  cursor: grab;
 }
 
 .synapse-branch-sidebar__item.is-dragging {
-    opacity: 0.6;
+  opacity: 0.6;
 }
 
 .synapse-branch-sidebar__item.is-drop-target {
-    border: 1px dashed var(--interactive-accent);
+  border: 1px dashed var(--interactive-accent);
 }
 
 .synapse-branch-sidebar__drag {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
 }
 
 .synapse-branch-sidebar__title {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .synapse-branch-sidebar__remove {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    border: none;
-    color: var(--text-muted);
-    cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
 }
 
 .synapse-branch-sidebar__empty {
-    margin-top: 1rem;
-    color: var(--text-muted);
-    font-size: 0.9rem;
+  margin-top: 1rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
 }

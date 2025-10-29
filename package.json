@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "node build.js --watch",
     "build": "node build.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "format": "prettier --write \"main.ts\" \"src/**/*.ts\" \"styles.css\" \"README.md\"",
+    "lint": "tsc --noEmit"
   },
   "keywords": ["obsidian", "plugin", "llm", "ai", "knowledge graph", "ollama"],
   "author": "zer0wipe",
@@ -15,7 +17,8 @@
     "@types/node": "^24.2.1",
     "esbuild": "^0.25.8",
     "obsidian": "^1.8.7",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "prettier": "^3.6.2"
   },
   "dependencies": {
     "tslib": "^2.8.1"
