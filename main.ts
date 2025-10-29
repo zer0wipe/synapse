@@ -5,13 +5,14 @@
  * including loading settings, initializing services, registering UI components, and handling the core
  * thought processing workflow.
  */
-import { Plugin, Notice, TFile } from 'obsidian';
+import { Plugin, Notice, TFile, Editor } from 'obsidian';
 import { SynapseSettings, DEFAULT_SETTINGS, SynapseSettingTab } from './src/settings';
 import { LLMService } from './src/llmService';
 import { NoteManager } from './src/noteManager';
 import { ContextBuilder } from './src/contextBuilder';
 import { SynapseConsoleView, SYNAPSE_VIEW_TYPE } from './src/consoleView';
-import { BranchModal } from './src/branchModal';
+import { BranchSidebarView, SYNAPSE_BRANCH_VIEW_TYPE } from './src/branchSidebar';
+import { BranchStore } from './src/branchStore';
 
 /**
  * Synapse: An AI-powered thought exploration plugin for Obsidian.
@@ -34,7 +35,7 @@ import { BranchModal } from './src/branchModal';
  * 
  * - UI Components:
  *   - Console View: Main interaction interface
- *   - Branch Modal: Context selection
+ *   - Branch Sidebar: Persistent context chain
  *   - Preview Modal: Context verification
  * 
  * Integration Points:
@@ -55,6 +56,8 @@ export default class SynapsePlugin extends Plugin {
     noteManager!: NoteManager;
     // Service for building conversational context from linked notes
     contextBuilder!: ContextBuilder;
+    // Store for managing the active branch chain
+    branchStore!: BranchStore;
 
 	/**
 	 * Called when the plugin is loaded. Performs all necessary setup.
@@ -78,14 +81,14 @@ export default class SynapsePlugin extends Plugin {
             (leaf) => new SynapseConsoleView(leaf, this)
         );
 
+        this.registerView(
+            SYNAPSE_BRANCH_VIEW_TYPE,
+            (leaf) => new BranchSidebarView(leaf, this)
+        );
+
         // Add a ribbon icon for the console
         this.addRibbonIcon('brain-circuit', 'Open Synapse Console', () => {
             this.activateView();
-        });
-
-        // Add a ribbon icon for branching
-        this.addRibbonIcon('git-branch', 'Branch Context', () => {
-            this.startBranching();
         });
 
 		// Register the console command
@@ -97,14 +100,62 @@ export default class SynapsePlugin extends Plugin {
             }
 		});
 
-        // Register the branch command
         this.addCommand({
-            id: 'start-branch',
-            name: 'Branch Context',
-            callback: () => {
-                this.startBranching();
+            id: 'synapse-add-note-to-branch',
+            name: 'Add note to branch',
+            callback: () => this.addActiveNoteToBranch()
+        });
+
+        this.addCommand({
+            id: 'synapse-clear-branch',
+            name: 'Clear branch',
+            callback: () => this.branchStore.clear()
+        });
+
+        this.addCommand({
+            id: 'synapse-show-branch',
+            name: 'Show branch',
+            callback: () => this.showBranchView()
+        });
+
+        this.addCommand({
+            id: 'synapse-inline-response',
+            name: 'Inline response from selection',
+            hotkeys: [{ modifiers: ['Mod'], key: 'Enter' }],
+            editorCallback: (editor, view) => {
+                const file = view?.file;
+                const selection = editor.getSelection();
+                if (!file) {
+                    new Notice("No active file. Please open a note first.");
+                    return;
+                }
+                this.generateInlineResponse(editor, file);
             }
         });
+
+        this.addCommand({
+            id: 'synapse-note-response',
+            name: 'Response in new linked note',
+            hotkeys: [{ modifiers: ['Mod', 'Shift'], key: 'Enter' }],
+            editorCallback: (editor, view) => {
+                const file = view?.file;
+                const selection = editor.getSelection();
+                if (!file) {
+                    new Notice("No active file. Please open a note first.");
+                    return;
+                }
+                if (!selection || selection.trim().length === 0) {
+                    new Notice("Highlight text first, then press Ctrl/Cmd+Shift+Enter.");
+                    return;
+                }
+                this.generateLinkedNoteResponse(editor, file);
+            }
+        });
+
+        this.registerDomEvent(document, 'click', (event) => {
+            this.handleInternalLinkClick(event);
+        });
+
 	}
 
     /**
@@ -118,6 +169,7 @@ export default class SynapsePlugin extends Plugin {
         }
         // Detach any open Synapse console views from the workspace.
         this.app.workspace.detachLeavesOfType(SYNAPSE_VIEW_TYPE);
+        this.app.workspace.detachLeavesOfType(SYNAPSE_BRANCH_VIEW_TYPE);
     }
 
     /**
@@ -153,6 +205,7 @@ export default class SynapsePlugin extends Plugin {
         this.llmService = new LLMService(DEFAULT_SETTINGS);
         this.noteManager = new NoteManager(this.app);
         this.contextBuilder = new ContextBuilder(this.app);
+        this.branchStore = new BranchStore();
     }
 
 	/**
@@ -200,69 +253,6 @@ export default class SynapsePlugin extends Plugin {
     }
 
     /**
-     * Starts the branching workflow for building context from the active note.
-     */
-    async startBranching() {
-        const activeFile = this.app.workspace.getActiveFile();
-        if (!activeFile) {
-            new Notice("No active note. Please open a note first.");
-            return;
-        }
-
-        // Open the branch modal to let the user select notes
-        new BranchModal(this.app, activeFile, (selectedNotes) => {
-            // When the user finishes selecting notes, build context from them
-            this.processThoughtWithBranch(selectedNotes);
-        }).open();
-    }
-
-    /**
-     * Processes a thought using an explicitly selected chain of notes for context.
-     * @param notes The array of notes selected by the user for building context.
-     */
-    async processThoughtWithBranch(notes: TFile[]) {
-        if (notes.length === 0) {
-            new Notice("No notes selected for context.");
-            return;
-        }
-
-        const focusNote = notes[0]; // The first note is our focus note
-        const thinkingNotice = new Notice("Building context from selected notes...", 0);
-
-        try {
-            // Build context string from the selected notes
-            let contextString = "";
-            for (const note of notes) {
-                const content = await this.app.vault.read(note);
-                // Remove wiki-links to avoid leaking link noise
-                const contentWithoutLinks = content.replace(/\[\[.*?\]\]/g, '');
-                contextString += `--- [Note: ${note.basename}] ---\n${contentWithoutLinks}\n\n`;
-            }
-
-            thinkingNotice.hide();
-            
-            // Open/focus the console view to get the prompt
-            await this.activateView();
-            
-            // Get the active console view
-            const leaves = this.app.workspace.getLeavesOfType(SYNAPSE_VIEW_TYPE);
-            const consoleView = leaves[0]?.view as SynapseConsoleView;
-            if (consoleView) {
-                consoleView.setSelectedNotes(notes);
-            } else {
-                new Notice("Failed to open the console view. Please try again.");
-            }
-
-        } catch (error) {
-            console.error("Synapse Error:", error);
-            thinkingNotice.hide();
-            if (error instanceof Error) {
-                new Notice(`Error: ${error.message}`);
-            }
-        }
-    }
-
-    /**
      * The main thought processing workflow, now supporting both automatic backlink traversal
      * and explicit note selection via branching.
      */
@@ -275,6 +265,8 @@ export default class SynapsePlugin extends Plugin {
             if (selectedNotes && selectedNotes.length > 0) {
                 // Use explicitly selected notes for context
                 context = await this.buildBranchedContext(selectedNotes);
+            } else if (this.branchStore.getBranch().length > 0) {
+                context = await this.buildBranchedContext(this.branchStore.getBranch().map(entry => entry.file));
             } else {
                 // Fall back to automatic backlink traversal
                 context = await this.contextBuilder.buildContext(activeFile);
@@ -284,7 +276,9 @@ export default class SynapsePlugin extends Plugin {
 
             const { title, content } = await this.llmService.generateResponse(prompt, context);
             const newNote = await this.noteManager.createNote(title, content, this.settings.newNoteFolder, activeFile);
-            await this.noteManager.addLinkToNoteFrontmatter(newNote, activeFile);
+
+            this.branchStore.add(newNote);
+            await this.showBranchView();
 
             thinkingNotice.hide();
             new Notice("Thought expanded. Check your graph view!");
@@ -304,5 +298,149 @@ export default class SynapsePlugin extends Plugin {
     private async buildBranchedContext(notes: TFile[]): Promise<string> {
         // Simply delegate to contextBuilder's new buildContextFromNotes method
         return await this.contextBuilder.buildContextFromNotes(notes);
+    }
+
+    public async addActiveNoteToBranch() {
+        const activeFile = this.app.workspace.getActiveFile();
+        if (!activeFile) {
+            new Notice("No active note. Please open a note first.");
+            return;
+        }
+        this.branchStore.add(activeFile);
+        await this.showBranchView();
+        new Notice(`${activeFile.basename} added to branch.`);
+    }
+
+    private async showBranchView() {
+        let leaf = this.app.workspace.getLeavesOfType(SYNAPSE_BRANCH_VIEW_TYPE)[0];
+
+        if (!leaf) {
+            leaf = this.app.workspace.getRightLeaf(false) ?? this.app.workspace.getRightLeaf(true);
+            if (!leaf) {
+                return;
+            }
+            await leaf.setViewState({
+                type: SYNAPSE_BRANCH_VIEW_TYPE,
+                active: true,
+            });
+        }
+
+        this.app.workspace.revealLeaf(leaf);
+    }
+
+    private async generateInlineResponse(editor: Editor, file?: TFile | null) {
+        if (!file) {
+            new Notice("No active file. Please open a note first.");
+            return;
+        }
+
+        const selectedText = editor.getSelection();
+        const prompt = selectedText.trim();
+        if (!prompt) {
+            new Notice("Select text to send as a prompt.");
+            return;
+        }
+
+        const from = editor.getCursor('from');
+        const to = editor.getCursor('to');
+        const range = {
+            from: { line: from.line, ch: from.ch },
+            to: { line: to.line, ch: to.ch },
+        };
+        const thinkingNotice = new Notice("Generating inline response...", 0);
+        try {
+            const response = await this.generateResponse(prompt, file);
+            thinkingNotice.setMessage("Writing response...");
+            const inlineText = response.content?.trim().length ? response.content.trim() : response.raw.trim();
+            thinkingNotice.hide();
+
+            editor.replaceRange(`${selectedText}\n\n${inlineText}\n`, range.from, range.to);
+            new Notice("Inline response inserted.");
+        } catch (error) {
+            console.error("Synapse Error:", error);
+            thinkingNotice.hide();
+            if (error instanceof Error) {
+                new Notice(`Error: ${error.message}`);
+            }
+        }
+    }
+
+    private async generateLinkedNoteResponse(editor: Editor, file?: TFile | null) {
+        if (!file) {
+            new Notice("No active file. Please open a note first.");
+            return;
+        }
+
+        const selectedText = editor.getSelection();
+        const prompt = selectedText.trim();
+        if (!prompt) {
+            new Notice("Select text to send as a prompt.");
+            return;
+        }
+
+        const from = editor.getCursor('from');
+        const to = editor.getCursor('to');
+        const range = {
+            from: { line: from.line, ch: from.ch },
+            to: { line: to.line, ch: to.ch },
+        };
+        const thinkingNotice = new Notice("Generating linked note...", 0);
+        try {
+            const response = await this.generateResponse(prompt, file);
+            const newNote = await this.noteManager.createNote(
+                response.title,
+                response.content,
+                this.settings.newNoteFolder,
+                file
+            );
+
+            const linkText = this.app.fileManager.generateMarkdownLink(newNote, file.path);
+            editor.replaceRange(`${selectedText}\n\n${linkText}\n`, range.from, range.to);
+
+            this.branchStore.add(newNote);
+            await this.showBranchView();
+            thinkingNotice.hide();
+            new Notice("Response saved as new note.");
+        } catch (error) {
+            console.error("Synapse Error:", error);
+            thinkingNotice.hide();
+            if (error instanceof Error) {
+                new Notice(`Error: ${error.message}`);
+            }
+        }
+    }
+
+    private async generateResponse(prompt: string, activeFile: TFile) {
+        let context: string;
+        const branchEntries = this.branchStore.getBranch();
+        if (branchEntries.length > 0) {
+            context = await this.buildBranchedContext(branchEntries.map(entry => entry.file));
+        } else {
+            context = await this.contextBuilder.buildContext(activeFile);
+        }
+
+        return await this.llmService.generateResponse(prompt, context);
+    }
+
+    private handleInternalLinkClick(event: MouseEvent) {
+        if (!(event.target instanceof HTMLElement)) {
+            return;
+        }
+
+        const linkEl = event.target.closest('a.internal-link');
+        if (!(linkEl instanceof HTMLElement)) {
+            return;
+        }
+
+        const activeFile = this.app.workspace.getActiveFile();
+        const linkTarget = linkEl.getAttribute('data-href') || linkEl.getAttribute('href');
+        if (!linkTarget || !activeFile) {
+            return;
+        }
+
+        const destination = this.app.metadataCache.getFirstLinkpathDest(linkTarget, activeFile.path);
+        if (destination instanceof TFile) {
+            this.branchStore.add(destination);
+        }
     }
 }

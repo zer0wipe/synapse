@@ -127,10 +127,10 @@ export class LLMService {
      * into a title and content for a new Obsidian note.
      * @param prompt The user's input prompt.
      * @param context The conversational context built from previous notes.
-     * @returns An object containing the generated title and content.
+     * @returns An object containing the generated title, content, and raw text.
      * @throws An error if the API provider is unsupported or if the LLM response is empty/invalid.
      */
-    async generateResponse(prompt: string, context: string): Promise<{title: string, content: string}> {
+    async generateResponse(prompt: string, context: string): Promise<{title: string, content: string, raw: string}> {
         // Currently, only Ollama is supported. This block would be extended for other providers.
         if (this.settings.apiProvider === 'Ollama') {
             // Construct the prompt for the Ollama API, including system prompt, context, and user prompt.
@@ -153,19 +153,21 @@ export class LLMService {
                 let content: string;
 
                 if (firstNewline === -1) {
-                    // If no newline, take the first 100 characters as title, rest as content (or empty if too short).
-                    title = responseText.substring(0, 100).trim();
-                    content = responseText.substring(100).trim();
+                    title = responseText.substring(0, 100).trim() || 'Synapse Response';
+                    content = responseText;
                 } else {
                     title = responseText.substring(0, firstNewline).trim();
                     content = responseText.substring(firstNewline + 1).trim();
+                    if (!content) {
+                        content = responseText;
+                    }
                 }
 
                 // Ensure the title is not excessively long, even if it had a newline.
                 if (title.length > 100) {
                     title = title.substring(0, 100).trim();
                 }
-                return { title, content };
+                return { title, content, raw: responseText };
             } catch (error) {
                 // Handle errors during response generation.
                 console.error("Error generating response:", error);
@@ -179,4 +181,3 @@ export class LLMService {
         }
     }
 }
-

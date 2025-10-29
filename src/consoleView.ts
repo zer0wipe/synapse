@@ -5,11 +5,9 @@
  * interface for interacting with the Synapse plugin, allowing them to input prompts
  * and trigger the thought processing workflow.
  */
-import { ItemView, WorkspaceLeaf, Setting, Notice, ButtonComponent, TFile } from 'obsidian';
+import { ItemView, WorkspaceLeaf, Notice, ButtonComponent, TFile } from 'obsidian';
 import SynapsePlugin from '../main';
-import { LLMService } from './llmService';
 import { ContextBuilder } from './contextBuilder';
-import { NoteManager } from './noteManager';
 import { ContextPreviewModal } from './contextPreviewModal';
 
 /**
@@ -29,22 +27,16 @@ export const SYNAPSE_VIEW_TYPE = "synapse-console-view";
  * Core Features:
  * - Prompt input with auto-resize
  * - Context preview functionality
- * - Branching context selection
+ * - Quick branch additions from the active note
  * - Direct thought generation
  * 
  * UI Components:
  * - Text input area
  * - Action buttons:
  *   - Preview: Show context chain
- *   - Branch: Select context notes
+ *   - Branch: Add the active note to the branch chain
  *   - Connect: Generate thought
  *   - Nevermind: Cancel operation
- * 
- * State Management:
- * - Tracks selected notes for branching
- * - Maintains input state
- * - Handles view lifecycle
- * 
  * @extends ItemView
  * @example
  * ```typescript
@@ -62,14 +54,8 @@ export class SynapseConsoleView extends ItemView {
     plugin: SynapsePlugin;
     // HTML element for the prompt input area
     promptInput!: HTMLTextAreaElement;
-    // Instance of the LLM service for generating responses
-    llmService: LLMService;
     // Instance of the context builder service
     contextBuilder: ContextBuilder;
-    // Instance of the note manager service
-    noteManager: NoteManager;
-    // Array of selected notes for branching context
-    selectedNotes?: TFile[];
 
     /**
      * Constructs a new SynapseConsoleView.
@@ -80,9 +66,7 @@ export class SynapseConsoleView extends ItemView {
         super(leaf);
         this.plugin = plugin;
         // Services are passed from the main plugin to ensure they use the same instances and settings.
-        this.llmService = plugin.llmService;
         this.contextBuilder = plugin.contextBuilder;
-        this.noteManager = plugin.noteManager;
     }
 
     /**
@@ -136,7 +120,6 @@ export class SynapseConsoleView extends ItemView {
             .setClass("synapse-button")
             .onClick(() => {
                 this.clearPrompt();
-                this.selectedNotes = undefined; // Clear selected notes
                 this.leaf.detach(); // Close the view
             });
 
@@ -152,13 +135,14 @@ export class SynapseConsoleView extends ItemView {
                     new Notice("No active file to preview context from.");
                     return;
                 }
+                const branchEntries = this.plugin.branchStore.getBranch();
                 new ContextPreviewModal(
                     this.app,
                     this.contextBuilder,
                     activeFile,
-                    this.selectedNotes,
+                    branchEntries.length > 0 ? branchEntries.map(entry => entry.file) : undefined,
                     () => {
-                        this.selectedNotes = [];
+                        this.plugin.branchStore.clear();
                         new Notice("Context chain cleared");
                     }
                 ).open();
@@ -171,12 +155,7 @@ export class SynapseConsoleView extends ItemView {
             .setClass("synapse-button")
             .setIcon("git-branch")
             .onClick(() => {
-                const activeFile = this.app.workspace.getActiveFile();
-                if (!activeFile) {
-                    new Notice("No active note. Please open a note first.");
-                    return;
-                }
-                this.plugin.startBranching();
+                this.plugin.addActiveNoteToBranch();
             });
 
         // "Connect" button to process the prompt.
@@ -191,14 +170,6 @@ export class SynapseConsoleView extends ItemView {
     }
 
     /**
-     * Called when the view is closed. Performs any necessary cleanup.
-     */
-    async onClose() {
-        // Clear any selected notes when the view is closed
-        this.selectedNotes = undefined;
-    }
-
-    /**
      * Clears the text from the prompt input area.
      */
     clearPrompt() {
@@ -209,7 +180,6 @@ export class SynapseConsoleView extends ItemView {
      * Processes the user's prompt.
      * It retrieves the prompt, clears the input, checks for an active file,
      * and then delegates the actual thought processing to the main plugin instance.
-     * @param selectedNotes Optional array of notes selected through branching
      */
     async processPrompt() {
         const prompt = this.promptInput.value;
@@ -226,17 +196,6 @@ export class SynapseConsoleView extends ItemView {
 
         // Delegate the core thought processing logic to the main plugin.
         // This keeps the view focused on UI and input handling.
-        this.plugin.processThought(prompt, activeFile, this.selectedNotes);
-        
-        // Clear the selected notes after processing
-        this.selectedNotes = undefined;
-    }
-    
-    /**
-     * Sets the array of selected notes for branched context building.
-     * @param notes The array of notes selected through the branching modal.
-     */
-    setSelectedNotes(notes: TFile[]) {
-        this.selectedNotes = notes;
+        this.plugin.processThought(prompt, activeFile);
     }
 }

@@ -110,7 +110,7 @@ export class ContextPreviewModal extends Modal {
             // Add a note about editing
             const noteEl = contentEl.createDiv('context-note');
             noteEl.createEl('p', { 
-                text: 'To modify this context, use the Branch button to manually select notes.'
+                text: 'Adjust the context by adding or removing notes from the branch sidebar or the command palette.'
             });
         } catch (error) {
             loadingEl.hide();

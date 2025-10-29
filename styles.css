@@ -306,3 +306,95 @@
     height: 16px;
     margin-right: 4px;
 }
+
+/* Branch sidebar */
+.synapse-branch-sidebar {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.synapse-branch-sidebar__content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.synapse-branch-sidebar__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.synapse-branch-sidebar__header h3 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.synapse-branch-sidebar__clear {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+.synapse-branch-sidebar__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.synapse-branch-sidebar__item {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 0.5rem;
+    align-items: center;
+    padding: 0.5rem;
+    border-radius: 6px;
+    background: var(--background-secondary);
+    cursor: grab;
+}
+
+.synapse-branch-sidebar__item.is-dragging {
+    opacity: 0.6;
+}
+
+.synapse-branch-sidebar__item.is-drop-target {
+    border: 1px dashed var(--interactive-accent);
+}
+
+.synapse-branch-sidebar__drag {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+}
+
+.synapse-branch-sidebar__title {
+    cursor: pointer;
+}
+
+.synapse-branch-sidebar__remove {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+.synapse-branch-sidebar__empty {
+    margin-top: 1rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}

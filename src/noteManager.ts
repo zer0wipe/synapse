@@ -5,7 +5,7 @@
  * and establishing links between them. It handles file path normalization, folder creation,
  * filename conflict resolution, and updating note frontmatter.
  */
-import { App, TFile, normalizePath, parseYaml, stringifyYaml } from 'obsidian';
+import { App, TFile, normalizePath } from 'obsidian';
 
 /**
  * Manages the creation and linking of Obsidian notes within the vault.
@@ -68,7 +68,11 @@ export class NoteManager {
      * @returns The sanitized title string.
      */
     private sanitizeTitle(title: string): string {
-        return title.replace(/[\/:]/g, '');
+        const cleaned = title
+            .replace(/[\/:\\*\?"<>|#\[\]]/g, '') // remove filesystem and markdown control chars
+            .replace(/\s+/g, ' ')
+            .trim();
+        return cleaned.length > 0 ? cleaned : 'Synapse Note';
     }
 
     /**
@@ -115,46 +119,4 @@ export class NoteManager {
         return await this.app.vault.create(filePath, content);
     }
 
-    /**
-     * Adds a link to a newly created note within the YAML frontmatter of the source note.
-     * This ensures that the new note is linked from its origin, facilitating graph view connections.
-     * The link is added to a 'synapse-links' array in the frontmatter.
-     * @param newFile The newly created Obsidian note (TFile).
-     * @param sourceFile The original Obsidian note from which the new note was generated (TFile).
-     */
-    async addLinkToNoteFrontmatter(newFile: TFile, sourceFile: TFile) {
-        // Generate the Markdown link text for the new file.
-        const linkText = this.app.fileManager.generateMarkdownLink(newFile, sourceFile.path);
-        // Read the current content of the source file.
-        const currentContent = await this.app.vault.read(sourceFile);
-
-        let frontmatter: Record<string, any> = {};
-        let contentWithoutFrontmatter = currentContent;
-        // Regex to match and extract YAML frontmatter from the note.
-        const frontmatterMatch = currentContent.match(/^---\n(.*?)\n---\n(.*)/s);
-
-        if (frontmatterMatch) {
-            // Parse existing YAML frontmatter. If parsing fails, initialize an empty object.
-            frontmatter = parseYaml(frontmatterMatch[1]) || {};
-            contentWithoutFrontmatter = frontmatterMatch[2]; // Content after the frontmatter.
-        }
-
-        // Ensure the 'synapse-links' array exists in the frontmatter.
-        if (!frontmatter['synapse-links']) {
-            frontmatter['synapse-links'] = [];
-        }
-        // Add the new link to the 'synapse-links' array if it's not already present.
-        if (!frontmatter['synapse-links'].includes(linkText)) {
-            frontmatter['synapse-links'].push(linkText);
-        }
-
-        // Reconstruct the frontmatter string and the full note content.
-        const newFrontmatter = `---
-${stringifyYaml(frontmatter)}---
-`;
-        const newContent = newFrontmatter + contentWithoutFrontmatter;
-
-        // Modify the source file with the updated content (including new frontmatter).
-        await this.app.vault.modify(sourceFile, newContent);
-    }
 }
