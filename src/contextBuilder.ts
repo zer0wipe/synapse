@@ -29,7 +29,7 @@ import { App, TFile } from "obsidian";
  * @example
  * ```typescript
  * const builder = new ContextBuilder(app);
- * const context = await builder.buildContext(activeFile);
+ * const context = await builder.buildAutoContext(activeFile);
  * // or
  * const branchedContext = await builder.buildContextFromNotes(selectedNotes);
  * ```
@@ -39,6 +39,8 @@ export class ContextBuilder {
   private app: App;
   // The maximum depth to traverse backlinks when building context.
   private maxDepth: number;
+  // Maximum number of notes allowed in the automatically generated context.
+  private maxAutoNotes: number;
 
   /**
    * Constructs a new ContextBuilder instance.
@@ -54,20 +56,25 @@ export class ContextBuilder {
    * @example
    * ```typescript
    * const builder = new ContextBuilder(app);
-   * builder.updateSettings({ contextDepth: 3 });
+   * builder.updateSettings({ contextDepth: 3, autoContextMaxNotes: 10 });
    * ```
    */
   constructor(app: App) {
     this.app = app;
     this.maxDepth = 5; // Default context depth
+    this.maxAutoNotes = 12; // Default automatic context size
   }
 
   /**
    * Updates the maximum context depth setting.
    * @param maxDepth The new maximum depth for context building.
    */
-  public updateSettings(maxDepth: number) {
-    this.maxDepth = maxDepth;
+  public updateSettings(options: {
+    contextDepth: number;
+    autoContextMaxNotes: number;
+  }) {
+    this.maxDepth = options.contextDepth;
+    this.maxAutoNotes = options.autoContextMaxNotes;
   }
 
   /**
@@ -81,35 +88,15 @@ export class ContextBuilder {
   }
 
   /**
-   * Builds a conversational context string by traversing backlinks from a starting file.
-   * The context includes the content of the `startFile` and its `maxDepth` number of parents.
+   * Builds a conversational context string by combining the active note with its nearby neighbors.
+   * The traversal gathers outgoing links and backlinks up to the configured depth and respects the
+   * maximum note count limit.
    * @param startFile The Obsidian note from which to start building context.
    * @returns A formatted string containing the content of the context chain.
    */
-  async buildContext(startFile: TFile): Promise<string> {
-    let contextChain: TFile[] = [];
-    let currentFile: TFile | null = startFile;
-    let depth = 0;
-    const visitedFiles = new Set<string>(); // To prevent infinite loops in case of circular links
-
-    // 1. Traverse backward to find the conversation history (parent notes).
-    while (currentFile && depth < this.maxDepth) {
-      if (visitedFiles.has(currentFile.path)) {
-        break; // Stop if a circular link is detected to prevent infinite recursion.
-      }
-      visitedFiles.add(currentFile.path);
-
-      // Add the current file to the beginning of the chain (oldest first).
-      contextChain.unshift(currentFile);
-
-      // Find the parent note that links to the current file.
-      const parentFile = this.findParent(currentFile);
-      currentFile = parentFile;
-      depth++;
-    }
-
-    // 2. Use the shared context building method to format the chain
-    return await this.formatNotes(contextChain);
+  async buildAutoContext(startFile: TFile): Promise<string> {
+    const chain = this.buildAutoContextChain(startFile);
+    return await this.formatNotes(chain);
   }
 
   /**
@@ -119,29 +106,34 @@ export class ContextBuilder {
    * @param file The file for which to find the parent.
    * @returns The parent TFile or null if no parent is found.
    */
-  private findParent(file: TFile): TFile | null {
-    const backlinks = this.getBacklinks(file);
+  private buildAutoContextChain(startFile: TFile): TFile[] {
+    const maxNotes = Math.max(1, this.maxAutoNotes);
+    const visited = new Set<string>();
+    const queue: Array<{ file: TFile; depth: number }> = [
+      { file: startFile, depth: 0 },
+    ];
+    const chain: TFile[] = [];
 
-    if (backlinks.length > 0) {
-      // Sort backlinks by modification time (newest first) to prioritize recent conversations.
-      backlinks.sort((a, b) => b.stat.mtime - a.stat.mtime);
-      return backlinks[0];
+    while (queue.length > 0 && chain.length < maxNotes) {
+      const { file, depth } = queue.shift()!;
+      if (visited.has(file.path)) {
+        continue;
+      }
+      visited.add(file.path);
+      chain.push(file);
+
+      if (depth >= this.maxDepth) {
+        continue;
+      }
+
+      for (const neighbor of this.getConnectedFiles(file)) {
+        if (!visited.has(neighbor.path)) {
+          queue.push({ file: neighbor, depth: depth + 1 });
+        }
+      }
     }
-    return null;
-  }
 
-  /**
-   * Retrieves all notes that link to the given file (backlinks).
-   * It attempts to use an undocumented Obsidian API for efficiency, falling back to a more
-   * general method if the API is not available or does not return data.
-   * @param file The file for which to get backlinks.
-   * @returns An array of TFile objects representing the backlinks.
-   */
-  private getBacklinks(file: TFile): TFile[] {
-    const bucket = new Map<string, TFile>();
-    this.collectBacklinksFromCache(file, bucket);
-    this.collectBacklinksFromResolvedLinks(file, bucket);
-    return Array.from(bucket.values());
+    return chain;
   }
 
   private async formatNotes(notes: TFile[]): Promise<string> {
@@ -156,6 +148,44 @@ export class ContextBuilder {
     const content = await this.app.vault.read(file);
     const contentWithoutLinks = content.replace(/\[\[.*?\]\]/g, "");
     return `--- [Note: ${file.basename}] ---\n${contentWithoutLinks}\n\n`;
+  }
+
+  private getConnectedFiles(file: TFile): TFile[] {
+    const connected = new Map<string, TFile>();
+    for (const target of this.getOutgoingLinks(file)) {
+      connected.set(target.path, target);
+    }
+    for (const backlink of this.getBacklinks(file)) {
+      connected.set(backlink.path, backlink);
+    }
+    connected.delete(file.path);
+    return Array.from(connected.values());
+  }
+
+  private getOutgoingLinks(file: TFile): TFile[] {
+    const resolved = this.app.metadataCache.resolvedLinks[file.path] ?? {};
+    const results: TFile[] = [];
+    for (const targetPath in resolved) {
+      const targetFile = this.fileFromPath(targetPath);
+      if (targetFile) {
+        results.push(targetFile);
+      }
+    }
+    return results;
+  }
+
+  /**
+   * Retrieves all notes that link to the given file (backlinks).
+   * It attempts to use an undocumented Obsidian API for efficiency, falling back to a more
+   * general method if the API is not available or does not return data.
+   * @param file The file for which to get backlinks.
+   * @returns An array of TFile objects representing the backlinks.
+   */
+  private getBacklinks(file: TFile): TFile[] {
+    const bucket = new Map<string, TFile>();
+    this.collectBacklinksFromCache(file, bucket);
+    this.collectBacklinksFromResolvedLinks(file, bucket);
+    return Array.from(bucket.values());
   }
 
   private collectBacklinksFromCache(file: TFile, bucket: Map<string, TFile>) {

@@ -23,7 +23,7 @@ Synapse turns Obsidian into a branching conversation space for ideas. Each excha
 1. Open any note and start writing. When a link sparks a tangent, follow it—the destination is added to the branch automatically.
 2. Use `Synapse: Add note to branch` if you want to pin the current file without following a link.
 3. Juggle the branch from the sidebar: drag to reorder, tap `×` to prune, or clear it entirely from the command palette.
-4. Highlight text and fire `Mod+Enter` for an inline answer or `Mod+Shift+Enter` to spawn a linked note. Synapse sends only the visible branch to your model.
+4. Highlight text and fire `Mod+Enter` for an inline answer or `Mod+Shift+Enter` to spawn a linked note. Synapse sends only the visible branch to your model; if the branch is empty, it falls back to automatic context (see below).
 5. Preview the exact context at any time with `Synapse: Preview branch context`, then keep exploring directly inside your vault.
 
 ### Branch Sidebar
@@ -31,6 +31,13 @@ Synapse turns Obsidian into a branching conversation space for ideas. Each excha
 - Add by action: opening links or running `Synapse: Add note to branch`.
 - Reorder with drag and drop; remove with the `×` button; clear via command palette.
 - Keep it handy with `Synapse: Show branch` to toggle the dockable pane.
+- The moment you pin anything, Synapse switches to fully manual context—automatic context stays out of the way until you clear the branch again.
+
+### Automatic Context
+
+- When the branch is empty, Synapse automatically includes the active note plus nearby outgoing links and backlinks.
+- Depth and total note count are capped by settings so the context stays focused.
+- Automatic context is invisible in the sidebar by design—use it as the default, then pin notes whenever you want to take manual control.
 
 ### Keyboard-First Commands
 
@@ -50,6 +57,8 @@ Open _Settings → Community plugins → Synapse_ to tune:
 - **Ollama endpoint** – Base URL for your local or remote Ollama instance.
 - **API provider & model** – Currently supports Ollama; set the model slug to match your install.
 - **New note folder** – Optional folder for generated notes; defaults to the source note’s location.
+- **Context depth** – Controls how many steps away Synapse walks the graph when auto-building context (affects both outgoing links and backlinks).
+- **Automatic context limit** – Caps the total number of notes in the auto-generated context chain.
 - **System prompt** – Customize Synapse’s voice and output expectations (title-first by default).
 
 Keep an Ollama server running with your chosen model pulled (`ollama run mistral`, etc.) so Synapse can connect.

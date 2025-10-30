@@ -23,6 +23,8 @@ export interface SynapseSettings {
   newNoteFolder: string;
   // The number of backlinks to traverse when building conversational context. A higher number provides more context but may increase processing time.
   contextDepth: number;
+  // The maximum number of notes to include when auto-generating context.
+  autoContextMaxNotes: number;
   // The system-level prompt that defines the AI assistant's persona and instructions.
   systemPrompt: string;
 }
@@ -37,6 +39,7 @@ export const DEFAULT_SETTINGS: SynapseSettings = {
   model: "mistral",
   newNoteFolder: "", // Default to root (or same folder as source note)
   contextDepth: 5,
+  autoContextMaxNotes: 12,
   systemPrompt: `You are Synapse, an AI assistant embedded within a knowledge graph (Obsidian). 
 The user is expanding their thoughts. Analyze the provided context (a chain of previous notes) and respond to the latest prompt. 
 Your response will be saved as a new, linked note. Be insightful and continue the line of reasoning.
@@ -146,6 +149,23 @@ export class SynapseSettingTab extends PluginSettingTab {
           .setDynamicTooltip() // Show current value as tooltip.
           .onChange(async (value) => {
             this.plugin.settings.contextDepth = value;
+            await this.plugin.saveSettings();
+          }),
+      );
+
+    // Setting for automatic context size
+    new Setting(containerEl)
+      .setName("Automatic Context Limit")
+      .setDesc(
+        "When no branch is selected, Synapse includes the active note and nearby linked notes automatically. This setting caps how many notes are included.",
+      )
+      .addSlider((slider) =>
+        slider
+          .setLimits(1, 30, 1)
+          .setValue(this.plugin.settings.autoContextMaxNotes)
+          .setDynamicTooltip()
+          .onChange(async (value) => {
+            this.plugin.settings.autoContextMaxNotes = value;
             await this.plugin.saveSettings();
           }),
       );

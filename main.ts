@@ -267,7 +267,10 @@ export default class SynapsePlugin extends Plugin {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
     // After loading, update the services with the user's configured settings.
     this.llmService.updateSettings(this.settings);
-    this.contextBuilder.updateSettings(this.settings.contextDepth);
+    this.contextBuilder.updateSettings({
+      contextDepth: this.settings.contextDepth,
+      autoContextMaxNotes: this.settings.autoContextMaxNotes,
+    });
   }
 
   /**
@@ -278,7 +281,10 @@ export default class SynapsePlugin extends Plugin {
     await this.saveData(this.settings);
     // After saving, update the services to reflect any changes.
     this.llmService.updateSettings(this.settings);
-    this.contextBuilder.updateSettings(this.settings.contextDepth);
+    this.contextBuilder.updateSettings({
+      contextDepth: this.settings.contextDepth,
+      autoContextMaxNotes: this.settings.autoContextMaxNotes,
+    });
   }
 
   /**
@@ -304,7 +310,7 @@ export default class SynapsePlugin extends Plugin {
         );
       } else {
         // Fall back to automatic backlink traversal
-        context = await this.contextBuilder.buildContext(activeFile);
+        context = await this.contextBuilder.buildAutoContext(activeFile);
       }
 
       thinkingNotice.setMessage("Generating response...");
@@ -468,7 +474,7 @@ export default class SynapsePlugin extends Plugin {
         branchEntries.map((entry) => entry.file),
       );
     } else {
-      context = await this.contextBuilder.buildContext(activeFile);
+      context = await this.contextBuilder.buildAutoContext(activeFile);
     }
 
     return await this.llmService.generateResponse(prompt, context);

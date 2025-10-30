@@ -75,7 +75,7 @@ export class ContextPreviewModal extends Modal {
       // Get the context that would be sent to the LLM
       const context = this.selectedNotes
         ? await this.contextBuilder.buildContextFromNotes(this.selectedNotes)
-        : await this.contextBuilder.buildContext(this.activeFile);
+        : await this.contextBuilder.buildAutoContext(this.activeFile);
 
       // Hide loading indicator
       loadingEl.hide();
