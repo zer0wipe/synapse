@@ -53,6 +53,45 @@ export class LLMService {
     this.settings = settings;
   }
 
+  private buildGeneratePayload(
+    prompt: string,
+    model: string,
+  ): Record<string, unknown> {
+    const payload: Record<string, unknown> = {
+      model,
+      prompt,
+      stream: false,
+    };
+    Object.assign(payload, this.collectSamplingOptions());
+    return payload;
+  }
+
+  private collectSamplingOptions(): Record<string, number> {
+    const options: Record<string, number> = {};
+    const assign = (key: string, value: number | null | undefined) => {
+      if (value !== null && value !== undefined) {
+        options[key] = value;
+      }
+    };
+
+    assign("temperature", this.settings.temperature);
+    assign("top_p", this.settings.topP);
+    assign("top_k", this.settings.topK);
+    assign("repeat_penalty", this.settings.repeatPenalty);
+    assign("repeat_last_n", this.settings.repeatLastN);
+    assign("frequency_penalty", this.settings.frequencyPenalty);
+    assign("presence_penalty", this.settings.presencePenalty);
+    assign("penalty_alpha", this.settings.penaltyAlpha);
+    assign("min_p", this.settings.minP);
+    assign("typical_p", this.settings.typicalP);
+    assign("mirostat", this.settings.mirostat);
+    assign("mirostat_tau", this.settings.mirostatTau);
+    assign("mirostat_eta", this.settings.mirostatEta);
+    assign("num_predict", this.settings.numPredict);
+    assign("num_ctx", this.settings.numCtx);
+    return options;
+  }
+
   /**
    * Makes an asynchronous API call to the Ollama LLM.
    *
@@ -101,11 +140,7 @@ export class LLMService {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        model: model,
-        prompt: prompt,
-        stream: false,
-      }),
+      body: JSON.stringify(this.buildGeneratePayload(prompt, model)),
     };
 
     try {

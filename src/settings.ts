@@ -5,8 +5,44 @@
  * It includes the interface for the settings, default values, and the implementation
  * of the settings tab that allows users to configure the plugin within Obsidian.
  */
-import { App, PluginSettingTab, Setting } from "obsidian";
+import {
+  App,
+  DropdownComponent,
+  PluginSettingTab,
+  Setting,
+  SliderComponent,
+  TextComponent,
+} from "obsidian";
 import SynapsePlugin from "../main";
+import {
+  LLMProfileId,
+  LLM_PROFILES,
+  LLMTuningValues,
+  matchProfile,
+} from "./llmProfiles";
+
+type TuningControlRefs = {
+  temperature: SliderComponent;
+  topP: SliderComponent;
+  topK: SliderComponent;
+  repeatPenalty: SliderComponent;
+  repeatLastN: SliderComponent;
+  frequencyPenalty: SliderComponent;
+  presencePenalty: SliderComponent;
+  penaltyAlpha: SliderComponent;
+  minP: SliderComponent;
+  typicalP: SliderComponent;
+  mirostat: DropdownComponent;
+  mirostatTau: SliderComponent;
+  mirostatEta: SliderComponent;
+  numPredict: TextComponent;
+  numCtx: TextComponent;
+};
+
+type SliderControlKey = Exclude<
+  keyof TuningControlRefs,
+  "mirostat" | "numPredict" | "numCtx"
+>;
 
 /**
  * Defines the structure of the Synapse plugin's settings.
@@ -27,6 +63,24 @@ export interface SynapseSettings {
   autoContextMaxNotes: number;
   // The system-level prompt that defines the AI assistant's persona and instructions.
   systemPrompt: string;
+  // Selected preset for LLM sampling parameters.
+  llmProfile: LLMProfileId | "custom";
+  // LLM sampling controls
+  temperature: number;
+  topP: number;
+  topK: number;
+  repeatPenalty: number;
+  repeatLastN: number;
+  frequencyPenalty: number;
+  presencePenalty: number;
+  penaltyAlpha: number;
+  minP: number;
+  typicalP: number;
+  mirostat: number;
+  mirostatTau: number;
+  mirostatEta: number;
+  numPredict: number;
+  numCtx: number;
 }
 
 /**
@@ -40,6 +94,22 @@ export const DEFAULT_SETTINGS: SynapseSettings = {
   newNoteFolder: "", // Default to root (or same folder as source note)
   contextDepth: 5,
   autoContextMaxNotes: 12,
+  llmProfile: "default",
+  temperature: LLM_PROFILES.default.temperature,
+  topP: LLM_PROFILES.default.topP,
+  topK: LLM_PROFILES.default.topK,
+  repeatPenalty: LLM_PROFILES.default.repeatPenalty,
+  repeatLastN: LLM_PROFILES.default.repeatLastN,
+  frequencyPenalty: LLM_PROFILES.default.frequencyPenalty,
+  presencePenalty: LLM_PROFILES.default.presencePenalty,
+  penaltyAlpha: LLM_PROFILES.default.penaltyAlpha,
+  minP: LLM_PROFILES.default.minP,
+  typicalP: LLM_PROFILES.default.typicalP,
+  mirostat: LLM_PROFILES.default.mirostat,
+  mirostatTau: LLM_PROFILES.default.mirostatTau,
+  mirostatEta: LLM_PROFILES.default.mirostatEta,
+  numPredict: LLM_PROFILES.default.numPredict,
+  numCtx: LLM_PROFILES.default.numCtx,
   systemPrompt: `You are Synapse, an AI assistant embedded within a knowledge graph (Obsidian). 
 The user is expanding their thoughts. Analyze the provided context (a chain of previous notes) and respond to the latest prompt. 
 Your response will be saved as a new, linked note. Be insightful and continue the line of reasoning.
@@ -71,6 +141,7 @@ export class SynapseSettingTab extends PluginSettingTab {
   display(): void {
     const { containerEl } = this;
     containerEl.empty(); // Clear existing content before rendering.
+    this.syncProfileWithValues();
 
     // Setting for Ollama Endpoint
     new Setting(containerEl)
@@ -170,6 +241,297 @@ export class SynapseSettingTab extends PluginSettingTab {
           }),
       );
 
+    const profileLabels: Record<LLMProfileId, string> = {
+      default: "Default balance",
+      "creative-writer": "Creative writer",
+      "coding-assistant": "Coding assistant",
+      "precise-research": "Precise research",
+    };
+
+    const controls: Partial<TuningControlRefs> = {};
+    let profileDropdown: DropdownComponent | undefined;
+    let updatingFromProfile = false;
+
+    const markCustom = () => {
+      if (this.plugin.settings.llmProfile !== "custom") {
+        this.plugin.settings.llmProfile = "custom";
+      }
+      profileDropdown?.setValue("custom");
+    };
+
+    const applyProfile = async (profileId: LLMProfileId) => {
+      const preset = LLM_PROFILES[profileId];
+      const settings = this.plugin.settings;
+      updatingFromProfile = true;
+      try {
+        controls.temperature?.setValue(preset.temperature);
+        controls.topP?.setValue(preset.topP);
+        controls.topK?.setValue(preset.topK);
+        controls.repeatPenalty?.setValue(preset.repeatPenalty);
+        controls.repeatLastN?.setValue(preset.repeatLastN);
+        controls.frequencyPenalty?.setValue(preset.frequencyPenalty);
+        controls.presencePenalty?.setValue(preset.presencePenalty);
+        controls.penaltyAlpha?.setValue(preset.penaltyAlpha);
+        controls.minP?.setValue(preset.minP);
+        controls.typicalP?.setValue(preset.typicalP);
+        controls.mirostatTau?.setValue(preset.mirostatTau);
+        controls.mirostatEta?.setValue(preset.mirostatEta);
+        controls.mirostat?.setValue(String(preset.mirostat));
+        controls.numPredict?.setValue(String(preset.numPredict));
+        controls.numCtx?.setValue(String(preset.numCtx));
+
+        settings.temperature = preset.temperature;
+        settings.topP = preset.topP;
+        settings.topK = preset.topK;
+        settings.repeatPenalty = preset.repeatPenalty;
+        settings.repeatLastN = preset.repeatLastN;
+        settings.frequencyPenalty = preset.frequencyPenalty;
+        settings.presencePenalty = preset.presencePenalty;
+        settings.penaltyAlpha = preset.penaltyAlpha;
+        settings.minP = preset.minP;
+        settings.typicalP = preset.typicalP;
+        settings.mirostatTau = preset.mirostatTau;
+        settings.mirostatEta = preset.mirostatEta;
+        settings.mirostat = preset.mirostat;
+        settings.numPredict = preset.numPredict;
+        settings.numCtx = preset.numCtx;
+      } finally {
+        updatingFromProfile = false;
+      }
+
+      settings.llmProfile = profileId;
+      profileDropdown?.setValue(profileId);
+      await this.plugin.saveSettings();
+    };
+
+    const registerSlider = (
+      key: SliderControlKey,
+      options: {
+        name: string;
+        desc: string;
+        min: number;
+        max: number;
+        step: number;
+      },
+    ) => {
+      let sliderRef: SliderComponent | undefined;
+      new Setting(containerEl)
+        .setName(options.name)
+        .setDesc(options.desc)
+        .addSlider((slider) => {
+          sliderRef = slider;
+          slider
+            .setLimits(options.min, options.max, options.step)
+            .setValue((this.plugin.settings as any)[key] as number)
+            .setDynamicTooltip()
+            .onChange(async (value) => {
+              if (updatingFromProfile) {
+                return;
+              }
+              (this.plugin.settings as any)[key] = value;
+              markCustom();
+              await this.plugin.saveSettings();
+            });
+        });
+      if (sliderRef) {
+        controls[key] = sliderRef;
+      }
+    };
+
+    const registerNumberInput = (
+      key: "numPredict" | "numCtx",
+      options: { name: string; desc: string; min?: number },
+    ) => {
+      let textRef: TextComponent | undefined;
+      new Setting(containerEl)
+        .setName(options.name)
+        .setDesc(options.desc)
+        .addText((text) => {
+          textRef = text;
+          text.inputEl.type = "number";
+          if (options.min !== undefined) {
+            text.inputEl.min = String(options.min);
+          }
+          text
+            .setValue(String((this.plugin.settings as any)[key] as number))
+            .onChange(async (value) => {
+              if (updatingFromProfile) {
+                return;
+              }
+              const parsed = Number(value);
+              if (!Number.isFinite(parsed)) {
+                return;
+              }
+              (this.plugin.settings as any)[key] = Math.round(parsed);
+              markCustom();
+              await this.plugin.saveSettings();
+            });
+        });
+      if (textRef) {
+        controls[key] = textRef;
+      }
+    };
+
+    containerEl.createEl("h3", { text: "LLM Output Tuning" });
+
+    new Setting(containerEl)
+      .setName("Sampling profile")
+      .setDesc("Start from a preset tuned for common tasks or switch to Custom.")
+      .addDropdown((dropdown) => {
+        profileDropdown = dropdown;
+        (Object.keys(profileLabels) as LLMProfileId[]).forEach((profile) => {
+          dropdown.addOption(profile, profileLabels[profile]);
+        });
+        dropdown.addOption("custom", "Custom");
+        const currentProfile =
+          this.plugin.settings.llmProfile === "custom"
+            ? "custom"
+            : this.plugin.settings.llmProfile;
+        dropdown.setValue(currentProfile);
+        dropdown.onChange(async (value) => {
+          if (value === "custom") {
+            this.plugin.settings.llmProfile = "custom";
+            await this.plugin.saveSettings();
+            return;
+          }
+          if (value in LLM_PROFILES) {
+            await applyProfile(value as LLMProfileId);
+          }
+        });
+      });
+
+    registerSlider("temperature", {
+      name: "Temperature",
+      desc: "Higher values increase randomness; lower values keep responses focused.",
+      min: 0,
+      max: 1.5,
+      step: 0.01,
+    });
+
+    registerSlider("topP", {
+      name: "Top P",
+      desc: "Nucleus sampling cutoff. The model samples only the most probable tokens whose cumulative probability stays under this value.",
+      min: 0,
+      max: 1,
+      step: 0.01,
+    });
+
+    registerSlider("topK", {
+      name: "Top K",
+      desc: "Restrict sampling to the K most likely tokens. Lower values tighten outputs; 0 disables the limit.",
+      min: 0,
+      max: 200,
+      step: 1,
+    });
+
+    registerSlider("repeatPenalty", {
+      name: "Repeat penalty",
+      desc: "Discourages repeated phrases. Values above 1.0 punish repeats.",
+      min: 0.8,
+      max: 2,
+      step: 0.01,
+    });
+
+    registerSlider("repeatLastN", {
+      name: "Repeat window",
+      desc: "Number of recent tokens considered when applying the repeat penalty.",
+      min: 16,
+      max: 512,
+      step: 16,
+    });
+
+    registerSlider("frequencyPenalty", {
+      name: "Frequency penalty",
+      desc: "Reduces tokens based on their overall frequency. Positive values curb repetition; negatives encourage reuse.",
+      min: -2,
+      max: 2,
+      step: 0.05,
+    });
+
+    registerSlider("presencePenalty", {
+      name: "Presence penalty",
+      desc: "Penalizes tokens that have appeared at all. Positive values push the model toward new topics.",
+      min: -2,
+      max: 2,
+      step: 0.05,
+    });
+
+    registerSlider("penaltyAlpha", {
+      name: "Penalty alpha",
+      desc: "Contrastive search balance parameter. Higher values emphasize less likely tokens.",
+      min: 0,
+      max: 2,
+      step: 0.05,
+    });
+
+    registerSlider("minP", {
+      name: "Min P",
+      desc: "Drops very low-probability tokens even when top-p is high. Set to 0 to disable.",
+      min: 0,
+      max: 1,
+      step: 0.01,
+    });
+
+    registerSlider("typicalP", {
+      name: "Typical P",
+      desc: "Keeps sampling near the model's 'typical' probability mass. 1 disables typical sampling.",
+      min: 0,
+      max: 1,
+      step: 0.01,
+    });
+
+    registerSlider("mirostatTau", {
+      name: "Mirostat τ",
+      desc: "Target surprise for Mirostat sampling. Lower values keep responses tighter.",
+      min: 1,
+      max: 10,
+      step: 0.5,
+    });
+
+    registerSlider("mirostatEta", {
+      name: "Mirostat η",
+      desc: "Learning rate for Mirostat sampling. Smaller numbers adjust more gently.",
+      min: 0.01,
+      max: 1,
+      step: 0.01,
+    });
+
+    let mirostatDropdown: DropdownComponent | undefined;
+    new Setting(containerEl)
+      .setName("Mirostat mode")
+      .setDesc("Adaptive sampling mode. 0 disables Mirostat; 1 and 2 enable different variants.")
+      .addDropdown((dropdown) => {
+        mirostatDropdown = dropdown;
+        dropdown
+          .addOption("0", "Disabled (0)")
+          .addOption("1", "Mirostat (1)")
+          .addOption("2", "Mirostat 2.0 (2)")
+          .setValue(String(this.plugin.settings.mirostat))
+          .onChange(async (value) => {
+            if (updatingFromProfile) {
+              return;
+            }
+            this.plugin.settings.mirostat = Number(value);
+            markCustom();
+            await this.plugin.saveSettings();
+          });
+      });
+    if (mirostatDropdown) {
+      controls.mirostat = mirostatDropdown;
+    }
+
+    registerNumberInput("numPredict", {
+      name: "Max tokens",
+      desc: "Upper bound on generated tokens. Ollama stops earlier if it hits a stop sequence.",
+      min: 32,
+    });
+
+    registerNumberInput("numCtx", {
+      name: "Context window",
+      desc: "Tokens to keep in the prompt context. Must not exceed the model's maximum.",
+      min: 256,
+    });
+
     // Setting for System Prompt (TextArea)
     const systemPromptSetting = new Setting(containerEl)
       .setName("System Prompt")
@@ -200,5 +562,33 @@ export class SynapseSettingTab extends PluginSettingTab {
         text.inputEl.style.height = text.inputEl.scrollHeight + "px";
       });
     });
+  }
+
+  private syncProfileWithValues() {
+    const inferred = matchProfile(this.currentTuningValues());
+    if (this.plugin.settings.llmProfile !== inferred) {
+      this.plugin.settings.llmProfile = inferred;
+    }
+  }
+
+  private currentTuningValues(): LLMTuningValues {
+    const settings = this.plugin.settings;
+    return {
+      temperature: settings.temperature,
+      topP: settings.topP,
+      topK: settings.topK,
+      repeatPenalty: settings.repeatPenalty,
+      repeatLastN: settings.repeatLastN,
+      frequencyPenalty: settings.frequencyPenalty,
+      presencePenalty: settings.presencePenalty,
+      penaltyAlpha: settings.penaltyAlpha,
+      minP: settings.minP,
+      typicalP: settings.typicalP,
+      mirostat: settings.mirostat,
+      mirostatTau: settings.mirostatTau,
+      mirostatEta: settings.mirostatEta,
+      numPredict: settings.numPredict,
+      numCtx: settings.numCtx,
+    };
   }
 }

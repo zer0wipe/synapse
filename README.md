@@ -39,6 +39,12 @@ Synapse turns Obsidian into a branching conversation space for ideas. Each excha
 - Depth and total note count are capped by settings so the context stays focused.
 - Automatic context is invisible in the sidebar by design—use it as the default, then pin notes whenever you want to take manual control.
 
+### LLM Profiles & Tuning
+
+- Choose a sampling profile (Default, Creative writer, Coding assistant, Precise research) to quickly swap between tuned behaviours.
+- Every profile simply pre-fills the underlying knobs—temperature, nucleus/top-k sampling, repetition penalties, Mirostat controls, and context/token limits.
+- Switching any slider or numeric input flips the profile to Custom so you can iterate from a preset without losing your tweaks.
+
 ### Keyboard-First Commands
 
 | Command                                 | Default Hotkey    | Description                                            |
@@ -59,6 +65,7 @@ Open _Settings → Community plugins → Synapse_ to tune:
 - **New note folder** – Optional folder for generated notes; defaults to the source note’s location.
 - **Context depth** – Controls how many steps away Synapse walks the graph when auto-building context (affects both outgoing links and backlinks).
 - **Automatic context limit** – Caps the total number of notes in the auto-generated context chain.
+- **Sampling profile** – Pick a preset tuned for common tasks, or set each sampling parameter manually for full control.
 - **System prompt** – Customize Synapse’s voice and output expectations (title-first by default).
 
 Keep an Ollama server running with your chosen model pulled (`ollama run mistral`, etc.) so Synapse can connect.
