@@ -41,7 +41,7 @@ Synapse turns Obsidian into a branching conversation space for ideas. Each excha
 
 ### LLM Profiles & Tuning
 
-- Choose a sampling profile (Default, Creative writer, Coding assistant, Precise research) to quickly swap between tuned behaviours.
+- Choose a sampling profile (Default, Creative writer, Coding assistant, Precise research, Brainstormer, Story weaver, Technical summary) to quickly swap between tuned behaviours.
 - Every profile simply pre-fills the underlying knobs—temperature, nucleus/top-k sampling, repetition penalties, Mirostat controls, and context/token limits.
 - Switching any slider or numeric input flips the profile to Custom so you can iterate from a preset without losing your tweaks.
 

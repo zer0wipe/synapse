@@ -246,6 +246,9 @@ export class SynapseSettingTab extends PluginSettingTab {
       "creative-writer": "Creative writer",
       "coding-assistant": "Coding assistant",
       "precise-research": "Precise research",
+      brainstormer: "Brainstormer",
+      "story-weaver": "Story weaver",
+      "technical-summary": "Technical summary",
     };
 
     const controls: Partial<TuningControlRefs> = {};
@@ -374,9 +377,45 @@ export class SynapseSettingTab extends PluginSettingTab {
 
     containerEl.createEl("h3", { text: "LLM Output Tuning" });
 
+    // Setting for System Prompt (TextArea)
+    const systemPromptSetting = new Setting(containerEl)
+      .setName("System Prompt")
+      .setDesc(
+        "Define the system prompt for the AI assistant. This sets the AI's persona, tone, and core instructions for generating responses.",
+      );
+
+    systemPromptSetting.settingEl.style.flexDirection = "column";
+    systemPromptSetting.settingEl.style.alignItems = "flex-start";
+    systemPromptSetting.controlEl.style.width = "100%";
+
+    systemPromptSetting.addTextArea((text) => {
+      text
+        .setPlaceholder("You are Synapse, an AI assistant...")
+        .setValue(this.plugin.settings.systemPrompt)
+        .onChange(async (value) => {
+          this.plugin.settings.systemPrompt = value;
+          await this.plugin.saveSettings();
+        });
+
+      text.inputEl.rows = 8;
+      text.inputEl.style.width = "100%";
+      text.inputEl.style.marginTop = "10px";
+      text.inputEl.style.minHeight = "160px";
+      text.inputEl.style.height = "auto";
+      text.inputEl.style.overflowY = "auto";
+      text.inputEl.addEventListener("input", () => {
+        text.inputEl.style.height = "auto";
+        text.inputEl.style.height = text.inputEl.scrollHeight + "px";
+      });
+      // Trigger the resize once so the initial height fits the content.
+      text.inputEl.dispatchEvent(new Event("input"));
+    });
+
     new Setting(containerEl)
       .setName("Sampling profile")
-      .setDesc("Start from a preset tuned for common tasks or switch to Custom.")
+      .setDesc(
+        "Start from a preset tuned for common tasks or switch to Custom.",
+      )
       .addDropdown((dropdown) => {
         profileDropdown = dropdown;
         (Object.keys(profileLabels) as LLMProfileId[]).forEach((profile) => {
@@ -499,7 +538,9 @@ export class SynapseSettingTab extends PluginSettingTab {
     let mirostatDropdown: DropdownComponent | undefined;
     new Setting(containerEl)
       .setName("Mirostat mode")
-      .setDesc("Adaptive sampling mode. 0 disables Mirostat; 1 and 2 enable different variants.")
+      .setDesc(
+        "Adaptive sampling mode. 0 disables Mirostat; 1 and 2 enable different variants.",
+      )
       .addDropdown((dropdown) => {
         mirostatDropdown = dropdown;
         dropdown
@@ -532,36 +573,6 @@ export class SynapseSettingTab extends PluginSettingTab {
       min: 256,
     });
 
-    // Setting for System Prompt (TextArea)
-    const systemPromptSetting = new Setting(containerEl)
-      .setName("System Prompt")
-      .setDesc(
-        "Define the system prompt for the AI assistant. This sets the AI's persona, tone, and core instructions for generating responses.",
-      );
-
-    // Adjust styling for the textarea to take full width and align correctly.
-    systemPromptSetting.settingEl.style.flexDirection = "column";
-    systemPromptSetting.settingEl.style.alignItems = "flex-start";
-    systemPromptSetting.controlEl.style.width = "100%";
-
-    systemPromptSetting.addTextArea((text) => {
-      text
-        .setPlaceholder("You are Synapse, an AI assistant...")
-        .setValue(this.plugin.settings.systemPrompt)
-        .onChange(async (value) => {
-          this.plugin.settings.systemPrompt = value;
-          await this.plugin.saveSettings();
-        });
-      // Auto-resize the textarea for the system prompt.
-      text.inputEl.style.width = "100%";
-      text.inputEl.style.marginTop = "10px";
-      text.inputEl.style.height = "auto";
-      text.inputEl.style.overflowY = "hidden";
-      text.inputEl.addEventListener("input", () => {
-        text.inputEl.style.height = "auto";
-        text.inputEl.style.height = text.inputEl.scrollHeight + "px";
-      });
-    });
   }
 
   private syncProfileWithValues() {

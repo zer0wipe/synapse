@@ -1,4 +1,11 @@
-export type LLMProfileId = "default" | "creative-writer" | "coding-assistant" | "precise-research";
+export type LLMProfileId =
+  | "default"
+  | "creative-writer"
+  | "coding-assistant"
+  | "precise-research"
+  | "brainstormer"
+  | "story-weaver"
+  | "technical-summary";
 
 export interface LLMTuningValues {
   temperature: number;
@@ -86,6 +93,57 @@ export const LLM_PROFILES: Record<LLMProfileId, LLMTuningValues> = {
     mirostatEta: 0.1,
     numPredict: 600,
     numCtx: 3072,
+  },
+  brainstormer: {
+    temperature: 1.05,
+    topP: 0.97,
+    topK: 100,
+    repeatPenalty: 0.95,
+    repeatLastN: 64,
+    frequencyPenalty: -0.3,
+    presencePenalty: 0.35,
+    penaltyAlpha: 0,
+    minP: 0,
+    typicalP: 0.92,
+    mirostat: 1,
+    mirostatTau: 6,
+    mirostatEta: 0.2,
+    numPredict: 900,
+    numCtx: 3072,
+  },
+  "story-weaver": {
+    temperature: 0.85,
+    topP: 0.93,
+    topK: 60,
+    repeatPenalty: 1.05,
+    repeatLastN: 160,
+    frequencyPenalty: -0.1,
+    presencePenalty: 0.25,
+    penaltyAlpha: 0,
+    minP: 0,
+    typicalP: 0.97,
+    mirostat: 2,
+    mirostatTau: 5,
+    mirostatEta: 0.15,
+    numPredict: 900,
+    numCtx: 4096,
+  },
+  "technical-summary": {
+    temperature: 0.25,
+    topP: 0.7,
+    topK: 40,
+    repeatPenalty: 1.18,
+    repeatLastN: 192,
+    frequencyPenalty: 0.35,
+    presencePenalty: -0.15,
+    penaltyAlpha: 0.4,
+    minP: 0.01,
+    typicalP: 0.9,
+    mirostat: 0,
+    mirostatTau: 5,
+    mirostatEta: 0.1,
+    numPredict: 480,
+    numCtx: 4096,
   },
 };
 
